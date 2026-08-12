@@ -1,0 +1,50 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model PipelineExecution {
+  id           String                  @id @default(uuid()) @db.Uuid
+  pipelineId   String                  @map("pipeline_id") @db.VarChar(64)
+  status       ExecutionStatus         @default(PENDING)
+  dagSnapshot  Json                    @map("dag_snapshot")
+  errorSummary String?                 @map("error_summary") @db.Text
+  startedAt    DateTime?               @map("started_at") @db.Timestamptz
+  finishedAt   DateTime?               @map("finished_at") @db.Timestamptz
+  createdAt    DateTime                @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime                @updatedAt @map("updated_at") @db.Timestamptz
+  nodeResults  PipelineNodeExecution[]
+
+  @@index([status])
+  @@map("pipeline_executions")
+}
+
+model PipelineNodeExecution {
+  id           String            @id @default(uuid()) @db.Uuid
+  executionId  String            @map("execution_id") @db.Uuid
+  nodeId       String            @map("node_id") @db.VarChar(64)
+  nodeType     String            @map("node_type") @db.VarChar(32)
+  status       ExecutionStatus   @default(PENDING)
+  attemptCount Int               @default(0) @map("attempt_count")
+  errorMessage String?           @map("error_message") @db.Text
+  inputData    Json?             @map("input_data")
+  outputData   Json?             @map("output_data")
+  startedAt    DateTime?         @map("started_at") @db.Timestamptz
+  finishedAt   DateTime?         @map("finished_at") @db.Timestamptz
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  execution    PipelineExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId, nodeId])
+  @@map("pipeline_node_executions")
+}

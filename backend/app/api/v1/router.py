@@ -1,0 +1,16 @@
+from fastapi import APIRouter
+
+from app.api.v1.endpoints import executions, websockets
+
+api_router = APIRouter()
+
+api_router.include_router(
+    executions.router,
+    prefix="/executions",
+    tags=["Executions"],
+)
+
+api_router.include_router(
+    websockets.router,
+    tags=["WebSockets"],
+)
