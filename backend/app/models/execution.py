@@ -22,7 +22,7 @@ class PipelineExecutionModel(Base):
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     pipeline_id: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[ExecutionStatus] = mapped_column(
-        SQLEnum(ExecutionStatus, name="execution_status_enum", create_type=False),
+        SQLEnum(ExecutionStatus, name="ExecutionStatus", create_type=False),
         default=ExecutionStatus.PENDING,
         nullable=False
     )
@@ -45,7 +45,7 @@ class PipelineNodeExecutionModel(Base):
     node_id: Mapped[str] = mapped_column(String(64), nullable=False)
     node_type: Mapped[str] = mapped_column(String(32), nullable=False)
     status: Mapped[ExecutionStatus] = mapped_column(
-        SQLEnum(ExecutionStatus, name="execution_status_enum", create_type=False),
+        SQLEnum(ExecutionStatus, name="ExecutionStatus", create_type=False),
         default=ExecutionStatus.PENDING,
         nullable=False
     )
