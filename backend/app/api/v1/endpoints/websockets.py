@@ -33,7 +33,6 @@ MAX_EXECUTION_WAIT_SECONDS = 300
 
 
 @router.websocket("/ws/executions/{execution_id}")
-@router.websocket("/api/v1/ws/executions/{execution_id}")
 async def websocket_execution_endpoint(
     websocket: WebSocket,
     execution_id: UUID,
