@@ -23,8 +23,7 @@ def get_redis_client() -> aioredis.Redis:
             settings.UPSTASH_REDIS_URL,
             encoding="utf-8",
             decode_responses=True,
-            socket_timeout=10.0,
-            socket_connect_timeout=10.0,
+            health_check_interval=30,
         )
     return _async_redis_client
 
@@ -47,8 +46,7 @@ def get_sync_redis_client() -> sync_redis.Redis:
     return sync_redis.Redis.from_url(
         settings.UPSTASH_REDIS_URL,
         decode_responses=True,
-        socket_timeout=10.0,
-        socket_connect_timeout=10.0,
+        health_check_interval=30,
     )
 
 
