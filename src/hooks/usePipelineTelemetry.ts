@@ -160,6 +160,47 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
     }
   }, [initialExecutionId, executionId, connect]);
 
+  // Sincronización REST resiliente (Dual-Transport Fallback mientras la ejecución esté activa)
+  useEffect(() => {
+    if (!executionId || status === "COMPLETED" || status === "FAILED") {
+      return;
+    }
+
+    const intervalId = setInterval(async () => {
+      try {
+        const detail = await executionApi.getExecutionDetail(executionId);
+        if (detail) {
+          setStatus(detail.status);
+          if (detail.node_executions && detail.node_executions.length > 0) {
+            detail.node_executions.forEach((nodeExec) => {
+              updateNodeStatus(
+                nodeExec.node_id,
+                nodeExec.status,
+                (nodeExec.output_data as Record<string, unknown>) || undefined,
+                nodeExec.error_message || undefined
+              );
+            });
+          }
+          if (detail.status === "COMPLETED" || detail.status === "FAILED") {
+            addLog({
+              id: `log-sync-done-${Date.now()}`,
+              timestamp: new Date().toISOString(),
+              level: detail.status === "COMPLETED" ? "SUCCESS" : "ERROR",
+              message: `[Sincronización] Ejecución finalizada: ${detail.status}${
+                detail.error_summary ? ` - ${detail.error_summary}` : ""
+              }`,
+              executionId,
+            });
+          }
+        }
+      } catch {
+        // Silencio en errores transitorios de polling
+      }
+    }, 1500);
+
+    return () => clearInterval(intervalId);
+  }, [executionId, status, updateNodeStatus, addLog]);
+
   /**
    * Despacha la ejecución del DAG hacia el servidor mediante REST HTTP 202
    * e inicie la reconexión por WebSocket.

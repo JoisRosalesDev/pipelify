@@ -25,8 +25,8 @@ router = APIRouter()
 # Estados finales que indican que la ejecución terminó
 TERMINAL_STATES = {ExecutionStatus.COMPLETED, ExecutionStatus.FAILED}
 
-# Intervalo de polling a la base de datos (ms)
-POLL_INTERVAL_SECONDS = 0.8
+# Intervalo de polling a la base de datos (segundos)
+POLL_INTERVAL_SECONDS = 0.6
 
 # Timeout máximo de espera para una ejecución (5 minutos)
 MAX_EXECUTION_WAIT_SECONDS = 300
@@ -35,31 +35,26 @@ MAX_EXECUTION_WAIT_SECONDS = 300
 @router.websocket("/ws/executions/{execution_id}")
 async def websocket_execution_endpoint(
     websocket: WebSocket,
-    execution_id: UUID,
+    execution_id: str,
     token: Optional[str] = Query(None),
 ):
     """
     Endpoint WebSocket bidireccional para transmisión de telemetría en tiempo real.
-    Usa polling directo a PostgreSQL (800ms) en lugar de Redis Pub/Sub,
-    garantizando estabilidad en entornos con Redis serverless como Upstash.
-
-    Protocolo de eventos emitidos al cliente:
-    - EXECUTION_STARTED: cuando el pipeline pasa a RUNNING
-    - NODE_UPDATED: cuando el estado de un nodo cambia
-    - EXECUTION_FINISHED: cuando el pipeline termina (COMPLETED o FAILED)
-    - PING: heartbeat cada 20 segundos
+    Acepta la conexión de inmediato para cumplir con el handshake ASGI y luego verifica autenticación.
     """
-    # 1. Pre-verificación del Token JWT antes de aceptar la conexión WebSocket
-    auth_token = token
+    # 1. Aceptar la conexión ASGI de inmediato
+    await websocket.accept()
+
+    # 2. Validación de Token JWT
+    auth_token = token or websocket.query_params.get("token")
     if not auth_token:
-        auth_token = websocket.query_params.get("token")
+        auth_header = websocket.headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            auth_token = auth_header[7:].strip()
 
     if not auth_token:
-        logger.warning(f"Intento de conexión WebSocket sin token para ejecución {execution_id}")
-        await websocket.close(
-            code=status.WS_1008_POLICY_VIOLATION,
-            reason="Token JWT no proporcionado",
-        )
+        logger.warning(f"WebSocket {execution_id}: Token no proporcionado.")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Token requerido")
         return
 
     clean_token = auth_token.strip()
@@ -74,44 +69,55 @@ async def websocket_execution_endpoint(
                 algorithms=[settings.JWT_ALGORITHM],
             )
         except Exception as exc:
-            logger.warning(
-                f"Rechazando WebSocket para {execution_id}: Token JWT inválido. Error: {exc}"
-            )
-            await websocket.close(
-                code=status.WS_1008_POLICY_VIOLATION,
-                reason="Token JWT inválido o expirado",
-            )
+            logger.warning(f"WebSocket {execution_id}: Token inválido ({exc})")
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Token inválido")
             return
 
-    # 2. Token verificado → Aceptar la conexión WebSocket
-    await websocket.accept()
-    logger.info(f"Conexión WebSocket aceptada para la ejecución: {execution_id}")
+    # 3. Validación de UUID
+    try:
+        uuid_execution_id = UUID(execution_id)
+    except ValueError:
+        logger.warning(f"WebSocket {execution_id}: UUID inválido.")
+        await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA, reason="UUID inválido")
+        return
 
-    # 3. Estado de seguimiento local para emitir solo los deltas (cambios)
+    logger.info(f"WebSocket activo y autenticado para ejecución: {execution_id}")
+
+    # 4. Estado de seguimiento local
     last_known_status: Optional[ExecutionStatus] = None
     last_node_states: dict[str, ExecutionStatus] = {}
     started_event_sent = False
     elapsed = 0.0
 
-    # Tarea 2: Heartbeat PING cada 20 segundos
+    async def safe_send(payload: dict) -> bool:
+        try:
+            await websocket.send_text(json.dumps(payload))
+            return True
+        except (WebSocketDisconnect, RuntimeError, asyncio.CancelledError):
+            return False
+        except Exception as err:
+            logger.debug(f"Error al enviar por WS: {err}")
+            return False
+
+    # Tarea 1: Heartbeat PING cada 20 segundos
     async def ping_heartbeat():
         try:
             while True:
                 await asyncio.sleep(20)
-                await websocket.send_text(json.dumps({
+                ok = await safe_send({
                     "event": "PING",
                     "execution_id": str(execution_id),
                     "status": ExecutionStatus.RUNNING.value,
                     "metrics": None,
                     "error_message": None,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
-                }))
+                })
+                if not ok:
+                    break
         except (asyncio.CancelledError, RuntimeError, WebSocketDisconnect):
             pass
-        except Exception as exc:
-            logger.debug(f"PING finalizado para {execution_id}: {exc}")
 
-    # Tarea 3: Escuchar mensajes del cliente (PONG)
+    # Tarea 2: Escuchar mensajes del cliente (PONG)
     async def client_listener():
         try:
             while True:
@@ -119,22 +125,15 @@ async def websocket_execution_endpoint(
                 try:
                     data = json.loads(msg_text)
                     if data.get("event") == "PONG":
-                        logger.debug(f"PONG recibido del cliente WS ({execution_id})")
+                        logger.debug(f"PONG recibido ({execution_id})")
                 except Exception:
                     pass
         except (WebSocketDisconnect, asyncio.CancelledError, RuntimeError):
             pass
-        except Exception as exc:
-            logger.debug(f"Cliente WS finalizado para {execution_id}: {exc}")
 
-    # 4. Bucle principal de polling a PostgreSQL
-    ping_task = asyncio.create_task(ping_heartbeat())
-    client_task = asyncio.create_task(client_listener())
-
-    nonlocal_done = False
-
+    # Tarea 3: Poller de PostgreSQL en tiempo real
     async def db_poller():
-        nonlocal last_known_status, last_node_states, started_event_sent, elapsed, nonlocal_done
+        nonlocal last_known_status, last_node_states, started_event_sent, elapsed
 
         async with AsyncSessionLocal() as db:
             while elapsed < MAX_EXECUTION_WAIT_SECONDS:
@@ -144,7 +143,7 @@ async def websocket_execution_endpoint(
                 try:
                     stmt = (
                         select(PipelineExecutionModel)
-                        .where(PipelineExecutionModel.id == execution_id)
+                        .where(PipelineExecutionModel.id == uuid_execution_id)
                         .options(selectinload(PipelineExecutionModel.node_executions))
                     )
                     result = await db.execute(stmt)
@@ -159,7 +158,7 @@ async def websocket_execution_endpoint(
                     if not started_event_sent and execution.status == ExecutionStatus.RUNNING:
                         started_event_sent = True
                         last_known_status = ExecutionStatus.RUNNING
-                        await websocket.send_text(json.dumps({
+                        ok = await safe_send({
                             "event": "EXECUTION_STARTED",
                             "execution_id": str(execution_id),
                             "node_id": None,
@@ -167,14 +166,16 @@ async def websocket_execution_endpoint(
                             "metrics": {"total_nodes": len(execution.node_executions)},
                             "error_message": None,
                             "timestamp": now_ts,
-                        }))
+                        })
+                        if not ok:
+                            return
 
                     # Emitir NODE_UPDATED cuando el estado de un nodo cambia
                     for node_exec in execution.node_executions:
                         prev = last_node_states.get(node_exec.node_id)
                         if prev != node_exec.status:
                             last_node_states[node_exec.node_id] = node_exec.status
-                            await websocket.send_text(json.dumps({
+                            ok = await safe_send({
                                 "event": "NODE_UPDATED",
                                 "execution_id": str(execution_id),
                                 "node_id": node_exec.node_id,
@@ -182,12 +183,14 @@ async def websocket_execution_endpoint(
                                 "metrics": node_exec.output_data,
                                 "error_message": node_exec.error_message,
                                 "timestamp": now_ts,
-                            }))
+                            })
+                            if not ok:
+                                return
 
                     # Emitir EXECUTION_FINISHED cuando llega a estado terminal
                     if execution.status in TERMINAL_STATES and execution.status != last_known_status:
                         last_known_status = execution.status
-                        await websocket.send_text(json.dumps({
+                        await safe_send({
                             "event": "EXECUTION_FINISHED",
                             "execution_id": str(execution_id),
                             "node_id": None,
@@ -205,18 +208,18 @@ async def websocket_execution_endpoint(
                             },
                             "error_message": execution.error_summary,
                             "timestamp": now_ts,
-                        }))
-                        nonlocal_done = True
-                        # Esperar un momento para que el cliente procese el evento
-                        await asyncio.sleep(1.5)
+                        })
+                        await asyncio.sleep(1.0)
                         return
 
                 except (asyncio.CancelledError, RuntimeError, WebSocketDisconnect):
                     return
                 except Exception as exc:
                     logger.error(f"Error en DB poller WS para {execution_id}: {exc}")
-                    await asyncio.sleep(2.0)
+                    await asyncio.sleep(1.5)
 
+    ping_task = asyncio.create_task(ping_heartbeat())
+    client_task = asyncio.create_task(client_listener())
     poller_task = asyncio.create_task(db_poller())
 
     try:
@@ -227,6 +230,6 @@ async def websocket_execution_endpoint(
         for task in pending:
             task.cancel()
     except Exception as exc:
-        logger.error(f"Error en el handler WS para {execution_id}: {exc}")
+        logger.error(f"Error en bucle WS para {execution_id}: {exc}")
     finally:
-        logger.info(f"Conexión WebSocket cerrada para la ejecución: {execution_id}")
+        logger.info(f"Conexión WebSocket cerrada para ejecución: {execution_id}")
