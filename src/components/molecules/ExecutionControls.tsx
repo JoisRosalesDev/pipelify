@@ -30,7 +30,6 @@ export function ExecutionControls({
 }: ExecutionControlsProps) {
   const normalizedStatus = status?.toUpperCase() as ExecutionStatus | undefined;
   const isRunning = normalizedStatus === "RUNNING";
-  const isPending = normalizedStatus === "PENDING";
   const isFinished =
     normalizedStatus === "COMPLETED" || normalizedStatus === "FAILED";
 
@@ -43,7 +42,7 @@ export function ExecutionControls({
         )
       )}
     >
-      {!isRunning && !isPending && (
+      {!isRunning && (
         <ActionButton
           variant="primary"
           size="md"
@@ -57,7 +56,7 @@ export function ExecutionControls({
         </ActionButton>
       )}
 
-      {(isRunning || isPending) && (
+      {isRunning && (
         <>
           {onPause && (
             <ActionButton
