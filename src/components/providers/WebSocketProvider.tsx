@@ -46,6 +46,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef<number>(0);
+  const executionDoneRef = useRef<boolean>(false);
 
   const clearTimers = useCallback(() => {
     if (pingIntervalRef.current) {
@@ -60,6 +61,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   const disconnect = useCallback(() => {
     clearTimers();
+    executionDoneRef.current = false;
     if (socketRef.current) {
       socketRef.current.close(1000, "Clean disconnect");
       socketRef.current = null;
@@ -117,6 +119,10 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
             if (data.event === "PONG") {
               return;
             }
+            // Si el pipeline terminó (COMPLETED o FAILED), marcar para no reconectar
+            if (data.event === "EXECUTION_FINISHED") {
+              executionDoneRef.current = true;
+            }
             setLastEvent(data);
           } catch {
             // Raw text fallback
@@ -129,12 +135,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
         ws.onclose = (event) => {
           clearTimers();
-          if (event.code === 1000) {
+          // Si la ejecución ya terminó (EXECUTION_FINISHED recibido), no reconectar
+          if (executionDoneRef.current || event.code === 1000 || event.code === 1001) {
             setConnectionStatus("DISCONNECTED");
             return;
           }
 
-          // Exponential backoff reconnect logic
+          // Exponential backoff reconnect logic (solo si el pipeline sigue activo)
           if (retryCountRef.current < 5) {
             setConnectionStatus("RECONNECTING");
             const delay = Math.min(

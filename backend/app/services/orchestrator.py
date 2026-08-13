@@ -53,7 +53,11 @@ class PipelineOrchestrator:
 
             logger.info(f"Transición a RUNNING para la ejecución: {execution_id}")
 
-            # 3. Publicar evento EXECUTION_STARTED en Redis Pub/Sub
+            # 3. Breve pausa para dar tiempo al cliente WebSocket de establecer la conexión
+            # antes de que el orquestador empiece a publicar eventos en el canal Pub/Sub.
+            await asyncio.sleep(2.0)
+
+            # 4. Publicar evento EXECUTION_STARTED en Redis Pub/Sub
             await publish_execution_event_async(
                 str(execution_id),
                 {
@@ -238,6 +242,11 @@ class PipelineOrchestrator:
             )
 
             logger.info(f"Pipeline completado exitosamente: {execution_id}")
+
+            # Pausa de gracia para asegurar que el cliente WebSocket recibe el evento
+            # EXECUTION_FINISHED antes de que el canal Pub/Sub se cierre en el servidor.
+            await asyncio.sleep(3.0)
+
             return {"status": "COMPLETED", "nodes_processed": processed_count}
 
     def _topological_sort(
