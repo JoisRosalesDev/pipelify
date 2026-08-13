@@ -38,12 +38,15 @@ app = FastAPI(
 )
 
 # Configuración de Middleware CORS con orígenes dinámicos autorizados
+origins = settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [settings.CORS_ORIGINS]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [settings.CORS_ORIGINS],
+    allow_origins=origins if "*" not in origins else ["*"],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["Authorization", "Content-Type", "X-Execution-ID", "X-Request-ID", "*"],
+    allow_headers=["*"],
 )
 
 app.include_router(api_router, prefix="/api/v1")

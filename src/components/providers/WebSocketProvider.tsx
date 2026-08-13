@@ -78,7 +78,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
       const wsBaseUrl =
         process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
-      const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : "";
+      const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : "?token=dev_token";
       const wsUrl = `${wsBaseUrl}/ws/executions/${executionId}${tokenQuery}`;
 
       try {
