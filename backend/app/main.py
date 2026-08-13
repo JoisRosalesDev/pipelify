@@ -30,6 +30,10 @@ async def lifespan(app: FastAPI):
     logger.info("Servicio Pipelify Core Backend finalizado correctamente.")
 
 
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
 app = FastAPI(
     title="Pipelify Realtime Pipeline Orchestration API",
     description="Motor de Orquestación y Monitoreo de Pipelines ETL en Tiempo Real",
@@ -48,6 +52,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Excepción no capturada en {request.url}: {exc}", exc_info=True)
+    origin = request.headers.get("origin")
+    response = JSONResponse(
+        status_code=500,
+        content={"detail": f"Error interno del servidor: {str(exc)}"},
+    )
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(api_router)

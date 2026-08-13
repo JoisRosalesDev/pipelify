@@ -69,49 +69,59 @@ async def create_execution(
 ) -> ExecutionResponse:
     """
     Ingesta el DAG de un pipeline y responde con HTTP 202 Accepted en menos de 100ms.
+    Procesa la ejecución mediante fallback asíncrono local directamente en FastAPI.
     """
     execution_id = uuid4()
     now = datetime.now(timezone.utc)
 
-    # 1. Crear registro principal de ejecución
-    execution = PipelineExecutionModel(
-        id=execution_id,
-        pipeline_id=payload.pipeline_id,
-        status=ExecutionStatus.PENDING,
-        dag_snapshot=payload.model_dump(mode="json"),
-    )
-    db.add(execution)
-
-    # 2. Crear registros iniciales para los nodos del DAG
-    for node in payload.nodes:
-        node_exec = PipelineNodeExecutionModel(
-            execution_id=execution_id,
-            node_id=node.id,
-            node_type=node.data.type,
-            status=ExecutionStatus.PENDING,
-            attempt_count=0,
-        )
-        db.add(node_exec)
-
-    await db.commit()
-    await db.refresh(execution)
-
-    # 3. Disparar procesamiento asíncrono en Celery (o fallback local)
     try:
-        execute_pipeline_task.delay(str(execution_id))
-        logger.info(f"Tarea Celery encolada exitosamente para execution_id: {execution_id}")
-    except Exception as exc:
-        logger.warning(
-            f"No se pudo encolar la tarea Celery (modo fallback local activado): {exc}"
+        # 1. Crear registro principal de ejecución
+        execution = PipelineExecutionModel(
+            id=execution_id,
+            pipeline_id=payload.pipeline_id,
+            status=ExecutionStatus.PENDING,
+            dag_snapshot=payload.model_dump(mode="json"),
         )
-        asyncio.create_task(execute_pipeline_dag(execution_id))
+        db.add(execution)
 
-    return ExecutionResponse(
-        execution_id=execution.id,
-        pipeline_id=execution.pipeline_id,
-        status=execution.status,
-        created_at=execution.created_at.isoformat() if execution.created_at else now.isoformat(),
-    )
+        # 2. Crear registros iniciales para los nodos del DAG
+        for node in payload.nodes:
+            node_type = getattr(node.data, "type", "extractor") if hasattr(node, "data") else "extractor"
+            node_exec = PipelineNodeExecutionModel(
+                execution_id=execution_id,
+                node_id=node.id,
+                node_type=str(node_type),
+                status=ExecutionStatus.PENDING,
+                attempt_count=0,
+            )
+            db.add(node_exec)
+
+        await db.commit()
+        await db.refresh(execution)
+
+        # 3. Disparar procesamiento asíncrono local directo (Fallback sin bloqueo)
+        try:
+            execute_pipeline_task.delay(str(execution_id))
+            logger.info(f"Tarea Celery encolada exitosamente para execution_id: {execution_id}")
+        except BaseException as exc:
+            logger.info(
+                f"Celery no disponible en plan gratuito. Modo fallback asíncrono local activado: {exc}"
+            )
+            asyncio.create_task(execute_pipeline_dag(execution_id))
+
+        return ExecutionResponse(
+            execution_id=execution.id,
+            pipeline_id=execution.pipeline_id,
+            status=execution.status,
+            created_at=execution.created_at.isoformat() if execution.created_at else now.isoformat(),
+        )
+    except Exception as exc:
+        logger.error(f"Error en create_execution: {exc}", exc_info=True)
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al crear la ejecución: {str(exc)}",
+        )
 
 
 @router.get(
