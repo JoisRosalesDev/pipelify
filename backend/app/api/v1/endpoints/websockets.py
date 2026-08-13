@@ -81,6 +81,8 @@ async def websocket_execution_endpoint(
                     await websocket.send_text(data)
         except asyncio.CancelledError:
             pass
+        except RuntimeError:
+            pass # Socket cerrado por el framework ASGI
         except Exception as exc:
             logger.error(f"Error en bucle listener de Redis Pub/Sub para {execution_id}: {exc}")
 
@@ -100,6 +102,8 @@ async def websocket_execution_endpoint(
                 await websocket.send_text(json.dumps(ping_payload))
         except asyncio.CancelledError:
             pass
+        except RuntimeError:
+            pass # Socket cerrado
         except Exception as exc:
             logger.debug(f"Bucle de PING finalizado para {execution_id}: {exc}")
 
@@ -119,6 +123,8 @@ async def websocket_execution_endpoint(
             logger.info(f"Cliente WebSocket desconectado normalmente ({execution_id})")
         except asyncio.CancelledError:
             pass
+        except RuntimeError:
+            pass
         except Exception as exc:
             logger.debug(f"Cliente WebSocket finalizado para {execution_id}: {exc}")
 
@@ -127,13 +133,17 @@ async def websocket_execution_endpoint(
     client_task = asyncio.create_task(client_listener())
 
     try:
-        await asyncio.gather(client_task, redis_task, return_exceptions=True)
+        # Esperar a que la PRIMERA tarea finalice (típicamente client_listener por desconexión)
+        done, pending = await asyncio.wait(
+            [client_task, redis_task, ping_task],
+            return_when=asyncio.FIRST_COMPLETED
+        )
+        
+        # Cancelar explícitamente las tareas que aún corren
+        for task in pending:
+            task.cancel()
+            
     finally:
-        ping_task.cancel()
-        redis_task.cancel()
-        client_task.cancel()
-        await asyncio.gather(ping_task, redis_task, client_task, return_exceptions=True)
-
         # 4. Desuscripción limpia de Redis Pub/Sub en bloque finally
         try:
             await pubsub.unsubscribe(f"execution:{execution_id}")
