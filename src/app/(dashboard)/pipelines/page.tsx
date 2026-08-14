@@ -213,11 +213,7 @@ export default function PipelinesPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950">
-      <AppNavbar
-        showBackButton
-        backFallbackHref="/"
-        breadcrumbs={[{ label: "Pipelines ETL", current: true }]}
-      />
+      <AppNavbar breadcrumbs={[{ label: "Pipelines ETL", current: true }]} />
 
       <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6">
         {/* Encabezado Principal */}

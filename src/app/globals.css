@@ -111,3 +111,58 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(113, 113, 122, 0.3) transparent;
 }
+
+/* React Flow Controls & Zoom Buttons Styling */
+.react-flow__controls {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  border: 1px solid #d4d4d8 !important;
+  background-color: #ffffff !important;
+}
+
+.dark .react-flow__controls {
+  border-color: #3f3f46 !important;
+  background-color: #18181b !important;
+}
+
+.react-flow__controls-button {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  color: #27272a !important;
+  fill: #27272a !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none !important;
+}
+
+.react-flow__controls-button:hover {
+  background-color: #f4f4f5 !important;
+  color: #09090b !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+}
+
+.dark .react-flow__controls-button {
+  background-color: #18181b !important;
+  border-bottom: 1px solid #27272a !important;
+  color: #f4f4f5 !important;
+  fill: #f4f4f5 !important;
+}
+
+.dark .react-flow__controls-button:hover {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}

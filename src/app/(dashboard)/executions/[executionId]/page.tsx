@@ -58,6 +58,9 @@ function ExecutionDetailPageContent() {
       : [{ label: "Lienzo Canvas", current: true }]),
   ];
 
+  // Estado para minimizar/expandir consola
+  const [isConsoleMinimized, setIsConsoleMinimized] = useState(false);
+
   // Temporizador de duración de ejecución activa
   const [durationSec, setDurationSec] = useState<number>(0);
 
@@ -83,16 +86,12 @@ function ExecutionDetailPageContent() {
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950">
-      {/* Barra de Navegación con Backbutton y Breadcrumbs */}
-      <AppNavbar
-        showBackButton
-        backFallbackHref="/pipelines"
-        breadcrumbs={breadcrumbItems}
-      />
+      {/* Barra de Navegación limpia: solo Logo y Breadcrumbs */}
+      <AppNavbar breadcrumbs={breadcrumbItems} />
 
-      {/* Banner Superior & Controles de Ejecución */}
-      <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-3 shrink-0 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Barra Superior Compacta de Controles y Resumen */}
+      <div className="px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shrink-0 shadow-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <PipelineInfoBanner
             pipelineId={`Pipeline: ${rawId}`}
             executionId={executionId || "Pendiente de despacho"}
@@ -102,7 +101,17 @@ function ExecutionDetailPageContent() {
             duration={formatDuration(durationSec)}
           />
 
-          <div className="flex items-center gap-3">
+          {/* Métricas Compactas e Inline */}
+          <div className="flex items-center gap-2 text-xs font-mono">
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+              <Cpu className="w-3.5 h-3.5 text-blue-500" />
+              <span>Nodos: {metrics.completedNodes}/{metrics.totalNodes}</span>
+            </div>
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+              <Database className="w-3.5 h-3.5 text-emerald-500" />
+              <span>{metrics.totalRecordsProcessed.toLocaleString()} filas</span>
+            </div>
+
             <ConnectionIndicator status={wsStatus} />
             <ExecutionControls
               status={status}
@@ -112,35 +121,6 @@ function ExecutionDetailPageContent() {
               isDispatching={isDispatching}
             />
           </div>
-        </div>
-
-        {/* Tarjetas de Métricas de Resumen */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-          <MetricCard
-            title="Progreso Nodos"
-            value={`${metrics.completedNodes} / ${metrics.totalNodes}`}
-            icon={<Cpu className="w-4 h-4" />}
-            variant={metrics.failedNodes > 0 ? "error" : "info"}
-          />
-          <MetricCard
-            title="Registros Procesados"
-            value={metrics.totalRecordsProcessed.toLocaleString()}
-            unit="filas"
-            icon={<Database className="w-4 h-4" />}
-            variant="success"
-          />
-          <MetricCard
-            title="Nodos en Ejecución"
-            value={metrics.runningNodes}
-            icon={<Activity className="w-4 h-4" />}
-            variant="warning"
-          />
-          <MetricCard
-            title="Nodos Fallidos"
-            value={metrics.failedNodes}
-            icon={<ShieldAlert className="w-4 h-4" />}
-            variant={metrics.failedNodes > 0 ? "error" : "neutral"}
-          />
         </div>
       </div>
 
@@ -176,11 +156,17 @@ function ExecutionDetailPageContent() {
         )}
       </div>
 
-      {/* Consola de Logs en Tiempo Real */}
-      <div className="h-48 sm:h-56 shrink-0 border-t border-zinc-200 dark:border-zinc-800">
+      {/* Consola de Logs en Tiempo Real (Minimizada o Expandida) */}
+      <div
+        className={`${
+          isConsoleMinimized ? "h-10" : "h-44 sm:h-52"
+        } shrink-0 border-t border-zinc-200 dark:border-zinc-800 transition-all duration-200`}
+      >
         <ExecutionLogsTable
           logs={logs}
           onClearLogs={clearLogs}
+          isMinimized={isConsoleMinimized}
+          onToggleMinimize={() => setIsConsoleMinimized((prev) => !prev)}
           className="h-full rounded-none border-none"
         />
       </div>
