@@ -2,17 +2,23 @@
 
 import React from "react";
 import { Node } from "@xyflow/react";
-import { X, Activity, Database, Cpu, UploadCloud } from "lucide-react";
+import { X, Activity, Database, Cpu, UploadCloud, Trash2 } from "lucide-react";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { ETLNodeData, ETLNodeType } from "@/types/pipeline";
 
 interface MobileBottomSheetProps {
   node: Node<ETLNodeData> | null;
+  onDeleteNode?: (nodeId: string) => void;
   onClose: () => void;
   className?: string;
 }
 
-export function MobileBottomSheet({ node, onClose, className }: MobileBottomSheetProps) {
+export function MobileBottomSheet({
+  node,
+  onDeleteNode,
+  onClose,
+  className,
+}: MobileBottomSheetProps) {
   if (!node) return null;
 
   const data = node.data as ETLNodeData;
@@ -120,6 +126,20 @@ export function MobileBottomSheet({ node, onClose, className }: MobileBottomShee
             </span>
           </div>
         </div>
+
+        {onDeleteNode && (
+          <button
+            type="button"
+            onClick={() => {
+              onDeleteNode(node.id);
+              onClose();
+            }}
+            className="w-full mt-3 py-2 px-3 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-semibold text-xs border border-red-200 dark:border-red-800 flex items-center justify-center gap-1.5 hover:bg-red-100 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Eliminar Nodo del Pipeline</span>
+          </button>
+        )}
       </div>
     </div>
   );

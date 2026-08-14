@@ -98,6 +98,7 @@ function PipelineCanvasContent({
         onConnect={onConnect}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
+        deleteKeyCode={["Backspace", "Delete"]}
         fitView
         snapToGrid
         snapGrid={[15, 15]}

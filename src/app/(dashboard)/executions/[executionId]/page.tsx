@@ -36,6 +36,7 @@ function ExecutionDetailPageContent() {
     onConnect,
     onSelectNode,
     addNode,
+    deleteNode,
     updateNodeConfig,
     executionId,
     status,
@@ -150,6 +151,7 @@ function ExecutionDetailPageContent() {
           <NodeConfigPanel
             node={selectedNode}
             onUpdateConfig={updateNodeConfig}
+            onDeleteNode={deleteNode}
             onClose={() => onSelectNode(null)}
             className="hidden md:flex"
           />
@@ -175,6 +177,7 @@ function ExecutionDetailPageContent() {
       {selectedNode && (
         <MobileBottomSheet
           node={selectedNode}
+          onDeleteNode={deleteNode}
           onClose={() => onSelectNode(null)}
         />
       )}

@@ -64,31 +64,33 @@ export function ExecutionLogsTable({
         isMinimized ? "h-10" : "h-full"
       } ${className || ""}`}
     >
-      {/* Console Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 select-none shrink-0 h-10">
+      {/* Console Header Bar (Optimizado para Mobile - Single Line) */}
+      <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 select-none shrink-0 h-10 flex-nowrap overflow-hidden">
         <div
           onClick={handleToggle}
-          className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
+          className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer hover:opacity-80 transition-opacity shrink-0 min-w-0"
         >
-          <div className="flex items-center gap-1.5 text-zinc-300 font-bold">
-            <Terminal className="w-3.5 h-3.5 text-blue-400" />
-            <span>Consola de Ejecución</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 text-zinc-300 font-bold shrink-0">
+            <Terminal className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <span className="hidden sm:inline">Consola de Ejecución</span>
+            <span className="sm:hidden text-[11px]">Consola</span>
           </div>
 
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700">
-            {filteredLogs.length} eventos
+          <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700 shrink-0">
+            {filteredLogs.length}
+            <span className="hidden sm:inline"> eventos</span>
           </span>
 
-          <span className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-0.5">
+          <span className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-0.5 shrink-0">
             {isMinimized ? (
               <>
                 <ChevronUp className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Expandir</span>
+                <span className="hidden md:inline">Expandir</span>
               </>
             ) : (
               <>
                 <ChevronDown className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Minimizar</span>
+                <span className="hidden md:inline">Minimizar</span>
               </>
             )}
           </span>
@@ -96,12 +98,12 @@ export function ExecutionLogsTable({
 
         {/* Filters and Controls (hidden when minimized) */}
         {!isMinimized && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Level Filter dropdown */}
             <select
               value={filterLevel}
               onChange={(e) => setFilterLevel(e.target.value as LogLevel | "ALL")}
-              className="bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              className="bg-zinc-800 border border-zinc-700 text-zinc-200 text-[10px] sm:text-xs rounded px-1 sm:px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-zinc-500 max-w-[80px] sm:max-w-none"
             >
               <option value="ALL">TODOS</option>
               <option value="INFO">INFO</option>
@@ -110,15 +112,15 @@ export function ExecutionLogsTable({
               <option value="SUCCESS">SUCCESS</option>
             </select>
 
-            {/* Search Input */}
-            <div className="relative hidden sm:block">
+            {/* Search Input (Hidden on mobile) */}
+            <div className="relative hidden md:block">
               <Search className="w-3.5 h-3.5 absolute left-2 top-1.5 text-zinc-500" />
               <input
                 type="text"
                 placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs rounded pl-7 pr-2 py-0.5 w-28 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                className="bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs rounded pl-7 pr-2 py-0.5 w-24 lg:w-32 focus:outline-none focus:ring-1 focus:ring-zinc-500"
               />
             </div>
 
@@ -126,7 +128,7 @@ export function ExecutionLogsTable({
             <button
               onClick={() => setAutoScroll((prev) => !prev)}
               title={autoScroll ? "Desactivar Auto-Scroll" : "Activar Auto-Scroll"}
-              className={`p-1 rounded transition-colors ${
+              className={`p-1 rounded transition-colors shrink-0 ${
                 autoScroll
                   ? "text-emerald-400 bg-emerald-950/40 border border-emerald-800"
                   : "text-zinc-500 hover:text-zinc-300 bg-zinc-800"
@@ -141,10 +143,10 @@ export function ExecutionLogsTable({
                 variant="outline"
                 size="sm"
                 onClick={onClearLogs}
-                className="!py-0.5 !px-2 text-[11px] border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                className="!py-0.5 !px-1.5 sm:!px-2 text-[10px] sm:text-[11px] border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 shrink-0"
               >
-                <Trash2 className="w-3.5 h-3.5 mr-1" />
-                Limpiar
+                <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 sm:mr-1" />
+                <span className="hidden sm:inline">Limpiar</span>
               </ActionButton>
             )}
 
@@ -152,7 +154,7 @@ export function ExecutionLogsTable({
             <button
               onClick={handleToggle}
               title="Minimizar consola"
-              className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
+              className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
             >
               <ChevronDown className="w-4 h-4" />
             </button>
@@ -164,10 +166,10 @@ export function ExecutionLogsTable({
       {!isMinimized && (
         <div
           ref={containerRef}
-          className="flex-1 overflow-y-auto p-2 console-scrollbar min-h-0"
+          className="flex-1 overflow-y-auto p-2 console-scrollbar min-h-0 text-[11px] sm:text-xs"
         >
           {filteredLogs.length === 0 ? (
-            <div className="py-8 text-center text-zinc-600 font-sans text-xs select-none">
+            <div className="py-6 text-center text-zinc-600 font-sans text-xs select-none">
               No se han registrado eventos en la consola.
             </div>
           ) : (

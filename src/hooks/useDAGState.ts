@@ -245,6 +245,17 @@ export function useDAGState(
     );
   }, [setNodes, setEdges]);
 
+  const deleteNode = useCallback(
+    (nodeId: string) => {
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) =>
+        eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+      );
+      setSelectedNodeId((curr) => (curr === nodeId ? null : curr));
+    },
+    [setNodes, setEdges]
+  );
+
   const clearCanvas = useCallback(() => {
     setNodes([]);
     setEdges([]);
@@ -265,6 +276,7 @@ export function useDAGState(
     onConnect,
     onSelectNode,
     addNode,
+    deleteNode,
     updateNodeStatus,
     updateNodeConfig,
     resetNodeStatuses,

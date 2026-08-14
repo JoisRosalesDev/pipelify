@@ -15,6 +15,7 @@ import {
   FileCode,
   HardDrive,
   CheckCircle2,
+  Trash2,
 } from "lucide-react";
 import { ETLNodeData, ETLNodeType } from "@/types/pipeline";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
@@ -23,6 +24,7 @@ import { ActionButton } from "@/components/atoms/ActionButton";
 interface NodeConfigPanelProps {
   node: Node<ETLNodeData> | null;
   onUpdateConfig: (nodeId: string, config: Record<string, any>, label?: string) => void;
+  onDeleteNode?: (nodeId: string) => void;
   onClose: () => void;
   className?: string;
 }
@@ -64,6 +66,7 @@ const WRITE_MODES = [
 export function NodeConfigPanel({
   node,
   onUpdateConfig,
+  onDeleteNode,
   onClose,
   className,
 }: NodeConfigPanelProps) {
@@ -424,9 +427,25 @@ export function NodeConfigPanel({
           />
         </div>
 
-        <ActionButton type="submit" variant="primary" className="mt-2 w-full">
-          Guardar Cambios
-        </ActionButton>
+        <div className="flex items-center gap-2 mt-2">
+          <ActionButton type="submit" variant="primary" className="flex-1">
+            Guardar Cambios
+          </ActionButton>
+
+          {onDeleteNode && (
+            <button
+              type="button"
+              onClick={() => {
+                onDeleteNode(node.id);
+                onClose();
+              }}
+              title="Eliminar nodo del lienzo"
+              className="p-2.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-800 transition-colors shrink-0 flex items-center justify-center"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </form>
 
       {/* Sección de Telemetría en Vivo del Nodo */}
