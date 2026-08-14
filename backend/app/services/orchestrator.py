@@ -350,7 +350,12 @@ class PipelineOrchestrator:
         await asyncio.sleep(random.uniform(0.3, 0.8))
 
         # Soporte de test de fallos para resiliencia y verificación
-        if config.get("fail_test") is True or config.get("force_fail") is True:
+        if (
+            config.get("fail_test") is True
+            or config.get("force_fail") is True
+            or config.get("forceFail") is True
+            or "fail" in str(config.get("transformFunction", "")).lower()
+        ):
             raise ValueError(f"Fallo simulado por configuración de prueba en el nodo '{node.get('id')}'")
 
         records_count = config.get("batch_size", random.randint(100, 5000))

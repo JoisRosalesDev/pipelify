@@ -26,6 +26,7 @@ export function NodeConfigPanel({
   const [timeoutSec, setTimeoutSec] = useState<number>(30);
   const [tableName, setTableName] = useState("");
   const [transformFunction, setTransformFunction] = useState("");
+  const [forceFail, setForceFail] = useState(false);
 
   useEffect(() => {
     if (node) {
@@ -36,6 +37,7 @@ export function NodeConfigPanel({
       setTimeoutSec(data.config?.timeoutSec || 30);
       setTableName(data.config?.tableName || "");
       setTransformFunction(data.config?.transformFunction || "");
+      setForceFail(Boolean(data.config?.force_fail || data.config?.forceFail));
     }
   }, [node]);
 
@@ -52,6 +54,7 @@ export function NodeConfigPanel({
         batchSize: Number(batchSize),
         retryAttempts: Number(retryAttempts),
         timeoutSec: Number(timeoutSec),
+        force_fail: forceFail,
         ...(tableName ? { tableName } : {}),
         ...(transformFunction ? { transformFunction } : {}),
       },
@@ -199,6 +202,19 @@ export function NodeConfigPanel({
             onChange={(e) => setTimeoutSec(Number(e.target.value))}
             className="w-full px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
           />
+        </div>
+
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 my-1">
+          <input
+            type="checkbox"
+            id="forceFailCheckbox"
+            checked={forceFail}
+            onChange={(e) => setForceFail(e.target.checked)}
+            className="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-zinc-300 dark:border-zinc-700 cursor-pointer"
+          />
+          <label htmlFor="forceFailCheckbox" className="font-medium text-red-700 dark:text-red-300 text-[11px] cursor-pointer">
+            Simular Fallo Crítico (Test Circuit Breaker)
+          </label>
         </div>
 
         <ActionButton type="submit" variant="primary" className="mt-2 w-full">
