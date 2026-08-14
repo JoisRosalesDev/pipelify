@@ -8,6 +8,7 @@ import { StatusBadge, ExecutionStatus } from "@/components/atoms/StatusBadge";
 import { MetricCard } from "@/components/molecules/MetricCard";
 import { executionApi } from "@/services/api";
 import { PipelineDAGPayload } from "@/types/pipeline";
+import { AppNavbar } from "@/components/organisms/AppNavbar";
 import {
   Layers,
   Plus,
@@ -211,8 +212,15 @@ export default function PipelinesPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6">
-      {/* Encabezado Principal */}
+    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950">
+      <AppNavbar
+        showBackButton
+        backFallbackHref="/"
+        breadcrumbs={[{ label: "Pipelines ETL", current: true }]}
+      />
+
+      <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6">
+        {/* Encabezado Principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">
@@ -363,5 +371,6 @@ export default function PipelinesPage() {
         )}
       </div>
     </div>
+  </div>
   );
 }

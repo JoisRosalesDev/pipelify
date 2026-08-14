@@ -12,6 +12,7 @@ import { NodeConfigPanel } from "@/components/organisms/NodeConfigPanel";
 import { ExecutionLogsTable } from "@/components/organisms/ExecutionLogsTable";
 import { MobileBottomSheet } from "@/components/molecules/MobileBottomSheet";
 import { usePipelineTelemetry } from "@/hooks/usePipelineTelemetry";
+import { AppNavbar } from "@/components/organisms/AppNavbar";
 import { Cpu, Database, ShieldAlert, Activity } from "lucide-react";
 import { MetricCard } from "@/components/molecules/MetricCard";
 
@@ -48,6 +49,15 @@ function ExecutionDetailPageContent() {
     clearLogs,
   } = telemetry;
 
+  // Breadcrumbs dinámicos
+  const breadcrumbItems = [
+    { label: "Pipelines", href: "/pipelines" },
+    { label: rawId, href: `/executions/${rawId}` },
+    ...(executionId && executionId !== rawId
+      ? [{ label: `Ejecución (${executionId.slice(0, 8)}...)`, current: true }]
+      : [{ label: "Lienzo Canvas", current: true }]),
+  ];
+
   // Temporizador de duración de ejecución activa
   const [durationSec, setDurationSec] = useState<number>(0);
 
@@ -72,7 +82,14 @@ function ExecutionDetailPageContent() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+      {/* Barra de Navegación con Backbutton y Breadcrumbs */}
+      <AppNavbar
+        showBackButton
+        backFallbackHref="/pipelines"
+        breadcrumbs={breadcrumbItems}
+      />
+
       {/* Banner Superior & Controles de Ejecución */}
       <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-3 shrink-0 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">

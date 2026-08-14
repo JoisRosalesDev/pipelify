@@ -18,13 +18,18 @@ export interface NodeMetrics {
 
 export interface ETLNodeConfig {
   sourceType?: string;
+  queryFilter?: string;
+  extractionLimit?: number;
+  transformationType?: string;
+  transformFunction?: string;
   destinationType?: string;
   tableName?: string;
+  writeMode?: string;
   query?: string;
   batchSize?: number;
   timeoutSec?: number;
   retryAttempts?: number;
-  transformFunction?: string;
+  force_fail?: boolean;
   [key: string]: any;
 }
 
