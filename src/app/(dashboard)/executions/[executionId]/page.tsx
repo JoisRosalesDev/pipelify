@@ -87,8 +87,8 @@ function ExecutionDetailPageContent() {
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950">
-      {/* Barra de Navegación limpia: solo Logo y Breadcrumbs */}
-      <AppNavbar breadcrumbs={breadcrumbItems} />
+      {/* Barra de Navegación limpia: Logo y enlaces */}
+      <AppNavbar />
 
       {/* Barra Superior Compacta de Controles y Resumen */}
       <div className="px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shrink-0 shadow-xs">

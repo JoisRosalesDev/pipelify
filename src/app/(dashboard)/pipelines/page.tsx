@@ -213,87 +213,87 @@ export default function PipelinesPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950">
-      <AppNavbar breadcrumbs={[{ label: "Pipelines ETL", current: true }]} />
+      <AppNavbar />
 
-      <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6">
+      <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6 animate-fade-in">
         {/* Encabezado Principal */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">
-            Pipelines ETL
-          </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Gestiona, construye y ejecuta tus flujos de datos automatizados en tiempo real.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-down">
+          <div>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">
+              Pipelines ETL
+            </h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              Gestiona, construye y ejecuta tus flujos de datos automatizados en tiempo real.
+            </p>
+          </div>
+          <Link href="/executions/new">
+            <ActionButton variant="primary" icon={<Plus className="w-4 h-4" />}>
+              Nuevo Pipeline
+            </ActionButton>
+          </Link>
         </div>
-        <Link href="/executions/new">
-          <ActionButton variant="primary" icon={<Plus className="w-4 h-4" />}>
-            Nuevo Pipeline
-          </ActionButton>
-        </Link>
-      </div>
 
-      {/* Métricas Globales del Dashboard */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <MetricCard
-          title="Pipelines Totales"
-          value={pipelines.length}
-          icon={<Layers className="w-5 h-5 text-blue-500" />}
-          variant="info"
-        />
-        <MetricCard
-          title="Ejecuciones Activas"
-          value={pipelines.filter((p) => p.status === "RUNNING").length}
-          icon={<Activity className="w-5 h-5 text-amber-500" />}
-          variant="warning"
-        />
-        <MetricCard
-          title="Tasa de Éxito"
-          value="98.5"
-          unit="%"
-          icon={<CheckCircle2 className="w-5 h-5 text-emerald-500" />}
-          variant="success"
-        />
-        <MetricCard
-          title="Registros Procesados"
-          value="1.2M"
-          unit="filas/día"
-          icon={<Database className="w-5 h-5 text-purple-500" />}
-          variant="neutral"
-        />
-      </div>
-
-      {/* Barra de Búsqueda y Filtros */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Buscar por nombre o ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+        {/* Métricas Globales del Dashboard */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 animate-fade-in-up animation-delay-75">
+          <MetricCard
+            title="Pipelines Totales"
+            value={pipelines.length}
+            icon={<Layers className="w-5 h-5 text-blue-500" />}
+            variant="info"
+          />
+          <MetricCard
+            title="Ejecuciones Activas"
+            value={pipelines.filter((p) => p.status === "RUNNING").length}
+            icon={<Activity className="w-5 h-5 text-amber-500" />}
+            variant="warning"
+          />
+          <MetricCard
+            title="Tasa de Éxito"
+            value="98.5"
+            unit="%"
+            icon={<CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+            variant="success"
+          />
+          <MetricCard
+            title="Registros Procesados"
+            value="1.2M"
+            unit="filas/día"
+            icon={<Database className="w-5 h-5 text-purple-500" />}
+            variant="neutral"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Estado:</span>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
-          >
-            <option value="ALL">Todos los Estados</option>
-            <option value="PENDING">PENDING</option>
-            <option value="RUNNING">RUNNING</option>
-            <option value="COMPLETED">COMPLETED</option>
-            <option value="FAILED">FAILED</option>
-          </select>
-        </div>
-      </div>
+        {/* Barra de Búsqueda y Filtros */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm animate-fade-in-up animation-delay-150">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre o ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+            />
+          </div>
 
-      {/* Lista de Pipelines */}
-      <div className="grid grid-cols-1 gap-4">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Estado:</span>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+            >
+              <option value="ALL">Todos los Estados</option>
+              <option value="PENDING">PENDING</option>
+              <option value="RUNNING">RUNNING</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="FAILED">FAILED</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Lista de Pipelines */}
+        <div className="grid grid-cols-1 gap-4 animate-fade-in-up animation-delay-225">
         {filteredPipelines.length === 0 ? (
           <div className="py-12 text-center text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
             <Layers className="w-10 h-10 mx-auto text-zinc-400 mb-2 stroke-1" />
