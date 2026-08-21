@@ -494,3 +494,18 @@ La siguiente tabla especifica el contrato estricto de variables de entorno reque
 | `CORS_ORIGINS` | Backend | Lista de orígenes permitidos separados por comas para CORS | `https://pipelify.vercel.app,http://localhost:3000` | Sí |
 | `CELERY_CONCURRENCY` | Backend | Número de procesos worker concurrentes de Celery | `4` | Sí |
 | `LOG_LEVEL` | Both | Nivel de verbosidad de logs (`DEBUG`, `INFO`, `WARNING`, `ERROR`) | `INFO` | Sí |
+
+---
+
+## 6. Requisitos de Navegación y Acceso Directo
+
+### Requirement: Landing Page Manual Navigation Action
+
+The landing page hero section MUST render an action button labeled "Manual" directing the user to `/manual`, replacing the legacy "Explorar Ejecución" button.
+
+#### Scenario: User clicks Manual button on landing page
+- GIVEN a user on the landing page (`/`)
+- WHEN the user clicks the "Manual" action button in the hero section
+- THEN the system MUST navigate to `/manual`
+- AND the legacy "Explorar Ejecución" button linking to `/executions/demo-execution-id` MUST NOT be displayed
+
