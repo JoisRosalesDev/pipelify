@@ -94,7 +94,8 @@ export function SidebarPalette({ onAddNode, className }: SidebarPaletteProps) {
                     <button
                       type="button"
                       onClick={() => onAddNode(item.type)}
-                      title="Agregar al lienzo"
+                      aria-label={`Agregar nodo ${item.label} al lienzo`}
+                      title={`Agregar nodo ${item.label} al lienzo`}
                       className="p-1 rounded-md text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors touch-manipulation"
                     >
                       <Plus className="w-3.5 h-3.5" />

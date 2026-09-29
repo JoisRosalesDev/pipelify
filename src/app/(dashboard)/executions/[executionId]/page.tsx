@@ -126,7 +126,7 @@ function ExecutionDetailPageContent() {
       </div>
 
       {/* Área Principal: Paleta + Canvas + Panel de Configuración */}
-      <div className="flex-1 flex min-h-0 relative overflow-hidden">
+      <main id="main-content" className="flex-1 flex min-h-0 relative overflow-hidden">
         {/* Paleta Lateral Izquierda (Desktop) */}
         <SidebarPalette
           onAddNode={(type) => addNode(type, { x: 250, y: 150 })}
@@ -156,7 +156,7 @@ function ExecutionDetailPageContent() {
             className="hidden md:flex"
           />
         )}
-      </div>
+      </main>
 
       {/* Consola de Logs en Tiempo Real (Minimizada o Expandida) */}
       <div

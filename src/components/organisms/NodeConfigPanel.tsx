@@ -170,6 +170,8 @@ export function NodeConfigPanel({
 
   return (
     <aside
+      role="region"
+      aria-label="Configuración de Nodo ETL"
       className={`w-80 xl:w-96 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 flex flex-col gap-4 shrink-0 overflow-y-auto ${
         className || ""
       }`}
@@ -186,7 +188,9 @@ export function NodeConfigPanel({
           </div>
         </div>
         <button
+          type="button"
           onClick={onClose}
+          aria-label="Cerrar panel de configuración"
           className="p-1 rounded-md text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
         >
           <X className="w-4 h-4" />
@@ -206,10 +210,14 @@ export function NodeConfigPanel({
       {/* Formulario de Configuración Específica */}
       <form onSubmit={handleSave} className="flex flex-col gap-3 text-xs">
         <div>
-          <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+          <label
+            htmlFor={`node-cfg-${node.id}-label`}
+            className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+          >
             Nombre del Nodo
           </label>
           <input
+            id={`node-cfg-${node.id}-label`}
             type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -223,10 +231,14 @@ export function NodeConfigPanel({
         {nodeType === "extractor" && (
           <>
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label
+                htmlFor={`node-cfg-${node.id}-sourceType`}
+                className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+              >
                 Tipo de Conexión / Origen
               </label>
               <select
+                id={`node-cfg-${node.id}-sourceType`}
                 value={sourceType}
                 onChange={(e) => setSourceType(e.target.value)}
                 className="w-full px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
@@ -240,10 +252,14 @@ export function NodeConfigPanel({
             </div>
 
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label
+                htmlFor={`node-cfg-${node.id}-tableName`}
+                className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+              >
                 Tabla / Endpoint / Ruta Origen
               </label>
               <input
+                id={`node-cfg-${node.id}-tableName`}
                 type="text"
                 value={tableName}
                 onChange={(e) => setTableName(e.target.value)}
@@ -253,10 +269,14 @@ export function NodeConfigPanel({
             </div>
 
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label
+                htmlFor={`node-cfg-${node.id}-queryFilter`}
+                className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+              >
                 Filtro SQL / Query Params (WHERE)
               </label>
               <input
+                id={`node-cfg-${node.id}-queryFilter`}
                 type="text"
                 value={queryFilter}
                 onChange={(e) => setQueryFilter(e.target.value)}
@@ -266,10 +286,14 @@ export function NodeConfigPanel({
             </div>
 
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label
+                htmlFor={`node-cfg-${node.id}-extractionLimit`}
+                className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+              >
                 Límite de Extracción (Max Rows)
               </label>
               <input
+                id={`node-cfg-${node.id}-extractionLimit`}
                 type="number"
                 value={extractionLimit}
                 onChange={(e) => setExtractionLimit(Number(e.target.value))}
@@ -285,10 +309,14 @@ export function NodeConfigPanel({
         {nodeType === "transformer" && (
           <>
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label
+                htmlFor={`node-cfg-${node.id}-transformationType`}
+                className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+              >
                 Tipo de Transformación
               </label>
               <select
+                id={`node-cfg-${node.id}-transformationType`}
                 value={transformationType}
                 onChange={(e) => setTransformationType(e.target.value)}
                 className="w-full px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
@@ -302,10 +330,14 @@ export function NodeConfigPanel({
             </div>
 
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label
+                htmlFor={`node-cfg-${node.id}-transformFunction`}
+                className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+              >
                 Función / Script de Transformación
               </label>
               <input
+                id={`node-cfg-${node.id}-transformFunction`}
                 type="text"
                 value={transformFunction}
                 onChange={(e) => setTransformFunction(e.target.value)}
@@ -317,13 +349,13 @@ export function NodeConfigPanel({
             <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 my-1">
               <input
                 type="checkbox"
-                id="forceFailCheckbox"
+                id={`node-cfg-${node.id}-forceFailCheckbox`}
                 checked={forceFail}
                 onChange={(e) => setForceFail(e.target.checked)}
                 className="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-zinc-300 dark:border-zinc-700 cursor-pointer"
               />
               <label
-                htmlFor="forceFailCheckbox"
+                htmlFor={`node-cfg-${node.id}-forceFailCheckbox`}
                 className="font-medium text-red-700 dark:text-red-300 text-[11px] cursor-pointer"
               >
                 Simular Fallo Crítico (Test Circuit Breaker)
@@ -338,10 +370,14 @@ export function NodeConfigPanel({
         {nodeType === "loader" && (
           <>
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label
+                htmlFor={`node-cfg-${node.id}-destinationType`}
+                className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+              >
                 Destino / Target Data Warehouse
               </label>
               <select
+                id={`node-cfg-${node.id}-destinationType`}
                 value={destinationType}
                 onChange={(e) => setDestinationType(e.target.value)}
                 className="w-full px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
@@ -355,10 +391,14 @@ export function NodeConfigPanel({
             </div>
 
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label
+                htmlFor={`node-cfg-${node.id}-loader-tableName`}
+                className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+              >
                 Tabla / Colección Destino Target
               </label>
               <input
+                id={`node-cfg-${node.id}-loader-tableName`}
                 type="text"
                 value={tableName}
                 onChange={(e) => setTableName(e.target.value)}
@@ -368,10 +408,14 @@ export function NodeConfigPanel({
             </div>
 
             <div>
-              <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label
+                htmlFor={`node-cfg-${node.id}-writeMode`}
+                className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+              >
                 Estrategia de Escritura (Write Mode)
               </label>
               <select
+                id={`node-cfg-${node.id}-writeMode`}
                 value={writeMode}
                 onChange={(e) => setWriteMode(e.target.value)}
                 className="w-full px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
@@ -391,10 +435,14 @@ export function NodeConfigPanel({
         =================================================================== */}
         <div className="grid grid-cols-2 gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-800">
           <div>
-            <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+            <label
+              htmlFor={`node-cfg-${node.id}-batchSize`}
+              className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+            >
               Tamaño Lote (Batch)
             </label>
             <input
+              id={`node-cfg-${node.id}-batchSize`}
               type="number"
               value={batchSize}
               onChange={(e) => setBatchSize(Number(e.target.value))}
@@ -403,10 +451,14 @@ export function NodeConfigPanel({
           </div>
 
           <div>
-            <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+            <label
+              htmlFor={`node-cfg-${node.id}-retryAttempts`}
+              className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+            >
               Reintentos Máx.
             </label>
             <input
+              id={`node-cfg-${node.id}-retryAttempts`}
               type="number"
               value={retryAttempts}
               onChange={(e) => setRetryAttempts(Number(e.target.value))}
@@ -416,10 +468,14 @@ export function NodeConfigPanel({
         </div>
 
         <div>
-          <label className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+          <label
+            htmlFor={`node-cfg-${node.id}-timeoutSec`}
+            className="block font-medium text-zinc-700 dark:text-zinc-300 mb-1"
+          >
             Timeout de Ejecución (Segundos)
           </label>
           <input
+            id={`node-cfg-${node.id}-timeoutSec`}
             type="number"
             value={timeoutSec}
             onChange={(e) => setTimeoutSec(Number(e.target.value))}
@@ -439,6 +495,7 @@ export function NodeConfigPanel({
                 onDeleteNode(node.id);
                 onClose();
               }}
+              aria-label="Eliminar nodo del lienzo"
               title="Eliminar nodo del lienzo"
               className="p-2.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-800 transition-colors shrink-0 flex items-center justify-center"
             >

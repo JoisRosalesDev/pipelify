@@ -42,6 +42,9 @@ export function MobileBottomSheet({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Configuración de Nodo ETL Móvil"
       className={`fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 rounded-t-2xl shadow-2xl p-4 transition-transform duration-300 max-h-[80vh] overflow-y-auto md:hidden ${
         className || ""
       }`}
@@ -64,7 +67,9 @@ export function MobileBottomSheet({
         <div className="flex items-center gap-2">
           <StatusBadge status={data.status || "PENDING"} size="sm" />
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Cerrar panel de configuración móvil"
             className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             <X className="w-4 h-4" />

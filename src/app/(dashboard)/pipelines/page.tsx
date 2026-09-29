@@ -215,7 +215,7 @@ export default function PipelinesPage() {
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950">
       <AppNavbar />
 
-      <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6 animate-fade-in">
+      <main id="main-content" className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6 animate-fade-in">
         {/* Encabezado Principal */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-down">
           <div>
@@ -366,7 +366,7 @@ export default function PipelinesPage() {
           })
         )}
       </div>
-    </div>
+      </main>
   </div>
   );
 }

@@ -14,6 +14,8 @@ const monoFont = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+import { SkipToContent } from "@/components/atoms/SkipToContent";
+
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pipelify.vercel.app";
 
 export const metadata: Metadata = {
@@ -75,8 +77,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: "#09090b",
 };
 
@@ -91,6 +91,7 @@ export default function RootLayout({
       className={`${sansFont.variable} ${monoFont.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans selection:bg-blue-500/20 selection:text-blue-400">
+        <SkipToContent />
         <WebSocketProvider>
           <ReactFlowProvider>{children}</ReactFlowProvider>
         </WebSocketProvider>

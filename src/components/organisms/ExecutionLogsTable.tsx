@@ -66,9 +66,13 @@ export function ExecutionLogsTable({
     >
       {/* Console Header Bar (Optimizado para Mobile - Single Line) */}
       <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-3 py-1.5 bg-zinc-900 border-b border-zinc-800 select-none shrink-0 h-10 flex-nowrap overflow-hidden">
-        <div
+        <button
+          type="button"
           onClick={handleToggle}
-          className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer hover:opacity-80 transition-opacity shrink-0 min-w-0"
+          aria-expanded={!isMinimized}
+          aria-controls="execution-logs-container"
+          aria-label={isMinimized ? "Expandir consola de ejecución" : "Minimizar consola de ejecución"}
+          className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer hover:opacity-80 transition-opacity shrink-0 min-w-0 bg-transparent border-0 p-0 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 rounded"
         >
           <div className="flex items-center gap-1 sm:gap-1.5 text-zinc-300 font-bold shrink-0">
             <Terminal className="w-3.5 h-3.5 text-blue-400 shrink-0" />
@@ -94,7 +98,7 @@ export function ExecutionLogsTable({
               </>
             )}
           </span>
-        </div>
+        </button>
 
         {/* Filters and Controls (hidden when minimized) */}
         {!isMinimized && (
@@ -103,6 +107,7 @@ export function ExecutionLogsTable({
             <select
               value={filterLevel}
               onChange={(e) => setFilterLevel(e.target.value as LogLevel | "ALL")}
+              aria-label="Filtrar por nivel de log"
               className="bg-zinc-800 border border-zinc-700 text-zinc-200 text-[10px] sm:text-xs rounded px-1 sm:px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-zinc-500 max-w-[80px] sm:max-w-none"
             >
               <option value="ALL">TODOS</option>
@@ -120,13 +125,16 @@ export function ExecutionLogsTable({
                 placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Buscar eventos en consola"
                 className="bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs rounded pl-7 pr-2 py-0.5 w-24 lg:w-32 focus:outline-none focus:ring-1 focus:ring-zinc-500"
               />
             </div>
 
             {/* Auto-Scroll Toggle */}
             <button
+              type="button"
               onClick={() => setAutoScroll((prev) => !prev)}
+              aria-label={autoScroll ? "Desactivar Auto-Scroll" : "Activar Auto-Scroll"}
               title={autoScroll ? "Desactivar Auto-Scroll" : "Activar Auto-Scroll"}
               className={`p-1 rounded transition-colors shrink-0 ${
                 autoScroll
@@ -143,6 +151,7 @@ export function ExecutionLogsTable({
                 variant="outline"
                 size="sm"
                 onClick={onClearLogs}
+                aria-label="Limpiar eventos de la consola"
                 className="!py-0.5 !px-1.5 sm:!px-2 text-[10px] sm:text-[11px] border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 shrink-0"
               >
                 <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 sm:mr-1" />
@@ -152,7 +161,9 @@ export function ExecutionLogsTable({
 
             {/* Minimize button */}
             <button
+              type="button"
               onClick={handleToggle}
+              aria-label={isMinimized ? "Expandir consola" : "Minimizar consola"}
               title="Minimizar consola"
               className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
             >
@@ -165,6 +176,11 @@ export function ExecutionLogsTable({
       {/* Logs Stream Container */}
       {!isMinimized && (
         <div
+          id="execution-logs-container"
+          role="log"
+          aria-live="polite"
+          aria-atomic="false"
+          aria-label="Registro de eventos de ejecución"
           ref={containerRef}
           className="flex-1 overflow-y-auto p-2 console-scrollbar min-h-0 text-[11px] sm:text-xs"
         >

@@ -62,7 +62,7 @@ export default function ManualPage() {
     <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950">
       <AppNavbar />
 
-      <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8 animate-fade-in">
+      <main id="main-content" className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8 animate-fade-in">
         {/* Header Hero */}
         <div className="flex flex-col items-start gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-6 animate-fade-in-down">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-semibold uppercase tracking-wider">

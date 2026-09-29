@@ -6,7 +6,7 @@ import { Play, Activity, ShieldCheck, BookOpen } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-5xl mx-auto animate-fade-in">
+    <main id="main-content" className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-5xl mx-auto animate-fade-in">
       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-6 animate-fade-in-down">
         <Activity className="w-3.5 h-3.5" />
         <span>Pipelify ETL Engine v1.0</span>
