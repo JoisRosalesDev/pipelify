@@ -72,7 +72,7 @@ export default function ManualPage() {
 
           <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-zinc-50 tracking-tight">
             Manual de Orquestación y{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">
+            <span className="text-blue-600 dark:text-blue-400 font-extrabold">
               Casos de Uso ETL
             </span>
           </h1>

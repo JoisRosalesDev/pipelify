@@ -37,9 +37,9 @@ const statusConfig: Record<
     label: "En Ejecución",
     icon: Loader2,
     containerClass:
-      "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/20 animate-pulse-glow",
-    iconClass: "text-blue-500 dark:text-blue-400 animate-spin",
-    dotClass: "bg-blue-500 animate-ping",
+      "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/20 animate-pulse-glow motion-reduce:animate-none",
+    iconClass: "text-blue-500 dark:text-blue-400 animate-spin motion-reduce:animate-none",
+    dotClass: "bg-blue-500 animate-ping motion-reduce:animate-none",
   },
   COMPLETED: {
     label: "Completado",
@@ -87,6 +87,8 @@ export function StatusBadge({
 
   return (
     <span
+      role="status"
+      aria-label={`Estado: ${label || config.label}`}
       className={twMerge(
         clsx(
           "inline-flex items-center font-medium rounded-full transition-colors select-none",

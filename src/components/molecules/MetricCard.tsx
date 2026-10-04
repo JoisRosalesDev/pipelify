@@ -28,7 +28,7 @@ export function MetricCard({
     <div
       className={twMerge(
         clsx(
-          "flex items-center gap-3.5 p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm select-none",
+          "flex items-center gap-3.5 p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm",
           className
         )
       )}

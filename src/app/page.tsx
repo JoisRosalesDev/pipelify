@@ -13,7 +13,7 @@ export default function HomePage() {
 
       <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 mb-4 animate-fade-in-up animation-delay-75">
         Orquestación de Pipelines ETL en{" "}
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">
+        <span className="text-blue-600 dark:text-blue-400 font-extrabold">
           Tiempo Real
         </span>
       </h1>

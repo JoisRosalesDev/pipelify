@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { ReactFlowProvider } from "@/components/providers/ReactFlowProvider";
 import { PipelineInfoBanner } from "@/components/molecules/PipelineInfoBanner";
 import { ExecutionControls } from "@/components/molecules/ExecutionControls";
-import { ConnectionIndicator } from "@/components/atoms/ConnectionIndicator";
 import { PipelineCanvas } from "@/components/organisms/PipelineCanvas";
 import { SidebarPalette } from "@/components/organisms/SidebarPalette";
 import { NodeConfigPanel } from "@/components/organisms/NodeConfigPanel";
@@ -110,10 +108,15 @@ function ExecutionDetailPageContent() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.0`;
   };
 
+  const breadcrumbItems = [
+    { label: "Pipelines", href: "/pipelines" },
+    { label: rawId, current: true },
+  ];
+
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950">
-      {/* Barra de Navegación limpia: Logo y enlaces */}
-      <AppNavbar />
+      {/* Barra de Navegación con Wayfinding */}
+      <AppNavbar breadcrumbs={breadcrumbItems} />
 
       {/* Barra Superior Compacta de Controles y Resumen */}
       <div className="px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shrink-0 shadow-xs">
@@ -151,7 +154,6 @@ function ExecutionDetailPageContent() {
               <span>{metrics.totalRecordsProcessed.toLocaleString()} filas</span>
             </div>
 
-            <ConnectionIndicator status={wsStatus} />
             <ExecutionControls
               status={status}
               onRun={() => dispatchExecution()}
@@ -266,9 +268,5 @@ function ExecutionDetailPageContent() {
 }
 
 export default function ExecutionDetailPage() {
-  return (
-    <ReactFlowProvider>
-      <ExecutionDetailPageContent />
-    </ReactFlowProvider>
-  );
+  return <ExecutionDetailPageContent />;
 }
