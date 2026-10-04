@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo } from "react";
+import React, { memo, useState } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { Database, Cpu, UploadCloud, AlertCircle } from "lucide-react";
 import { StatusBadge, ExecutionStatus } from "@/components/atoms/StatusBadge";
@@ -25,6 +25,7 @@ const statusStyles: Record<ExecutionStatus, string> = {
 };
 
 export const CustomETLNode = memo(({ data, selected }: NodeProps<ETLNode>) => {
+  const [isErrorExpanded, setIsErrorExpanded] = useState(false);
   const nodeData = data as ETLNodeData;
   const status: ExecutionStatus = nodeData?.status || "PENDING";
   const nodeType: ETLNodeType | string = nodeData?.type || "extractor";
@@ -33,12 +34,19 @@ export const CustomETLNode = memo(({ data, selected }: NodeProps<ETLNode>) => {
 
   const records = nodeData?.metrics?.processedRecords ?? nodeData?.metrics?.recordsProcessed;
   const duration = nodeData?.metrics?.durationMs ?? nodeData?.metrics?.executionTimeMs;
+  const hasLongError = Boolean(
+    nodeData?.errorMessage && (nodeData.errorMessage.length > 50 || nodeData.errorMessage.includes("\n"))
+  );
 
   return (
     <div
+      role="region"
+      aria-label={`Nodo ${nodeType}: ${nodeData?.label || "Sin nombre"}, estado: ${status}`}
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+      tabIndex={0}
       className={twMerge(
         clsx(
-          "relative min-w-[240px] max-w-[280px] rounded-xl border bg-white dark:bg-zinc-900 p-3.5 shadow-sm transition-all duration-200 select-none",
+          "relative min-w-[240px] max-w-[280px] rounded-xl border bg-white dark:bg-zinc-900 p-3.5 shadow-sm transition-all duration-200 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
           statusStyles[status] || statusStyles.PENDING,
           selected && "ring-2 ring-zinc-900 dark:ring-zinc-100 border-transparent shadow-md"
         )
@@ -47,8 +55,8 @@ export const CustomETLNode = memo(({ data, selected }: NodeProps<ETLNode>) => {
       {/* Target Handle */}
       <Handle
         type="target"
-        position={Position.Top}
-        className="w-3.5 h-3.5 bg-white dark:bg-zinc-800 border-2 border-zinc-400 dark:border-zinc-500 rounded-full transition-transform hover:scale-125 !-top-2"
+        position={Position.Left}
+        className="w-3.5 h-3.5 bg-white dark:bg-zinc-800 border-2 border-zinc-400 dark:border-zinc-500 rounded-full transition-transform hover:scale-125 !-left-2 top-1/2 -translate-y-1/2"
       />
 
       {/* Node Header */}
@@ -98,17 +106,43 @@ export const CustomETLNode = memo(({ data, selected }: NodeProps<ETLNode>) => {
 
       {/* Error Message alert */}
       {status === "FAILED" && nodeData?.errorMessage && (
-        <div className="mt-2 flex items-start gap-1.5 p-1.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px]">
-          <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-          <span className="line-clamp-2 font-mono">{nodeData.errorMessage}</span>
+        <div className="mt-2 p-2 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px]">
+          <div className="flex items-start gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <span
+                className={clsx(
+                  "font-mono block break-words",
+                  isErrorExpanded
+                    ? "max-h-40 overflow-y-auto whitespace-pre-wrap nowheel"
+                    : "line-clamp-2"
+                )}
+              >
+                {nodeData.errorMessage}
+              </span>
+              {hasLongError && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsErrorExpanded((prev) => !prev);
+                  }}
+                  className="mt-1 font-sans font-medium text-rose-600 dark:text-rose-400 hover:underline hover:text-rose-800 dark:hover:text-rose-200 focus:outline-none focus-visible:ring-1 focus-visible:ring-rose-500 rounded nodrag cursor-pointer"
+                  aria-expanded={isErrorExpanded}
+                >
+                  {isErrorExpanded ? "Ocultar" : "Ver detalle"}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
       {/* Source Handle */}
       <Handle
         type="source"
-        position={Position.Bottom}
-        className="w-3.5 h-3.5 bg-white dark:bg-zinc-800 border-2 border-zinc-400 dark:border-zinc-500 rounded-full transition-transform hover:scale-125 !-bottom-2"
+        position={Position.Right}
+        className="w-3.5 h-3.5 bg-white dark:bg-zinc-800 border-2 border-zinc-400 dark:border-zinc-500 rounded-full transition-transform hover:scale-125 !-right-2 top-1/2 -translate-y-1/2"
       />
     </div>
   );
