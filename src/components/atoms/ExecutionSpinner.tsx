@@ -25,6 +25,8 @@ export function ExecutionSpinner({
 }: ExecutionSpinnerProps) {
   return (
     <div
+      role="status"
+      aria-label={label || "Cargando..."}
       className={twMerge(
         clsx(
           "inline-flex items-center gap-2 text-zinc-600 dark:text-zinc-400",
@@ -33,6 +35,7 @@ export function ExecutionSpinner({
       )}
     >
       <Loader2
+        aria-hidden="true"
         className={clsx("animate-spin text-blue-500", sizeClasses[size])}
       />
       {label && <span className="text-sm font-medium">{label}</span>}

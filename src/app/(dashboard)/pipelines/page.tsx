@@ -267,19 +267,29 @@ export default function PipelinesPage() {
         {/* Barra de Búsqueda y Filtros */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm animate-fade-in-up animation-delay-150">
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" />
+            <label htmlFor="pipeline-search" className="sr-only">
+              Buscar pipelines
+            </label>
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-zinc-400" aria-hidden="true" />
             <input
+              id="pipeline-search"
               type="text"
+              aria-label="Buscar pipelines por nombre o descripción"
               placeholder="Buscar por nombre o ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+              className="w-full bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 text-xs rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
             />
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label htmlFor="status-filter" className="sr-only">
+              Filtrar por estado
+            </label>
             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Estado:</span>
             <select
+              id="status-filter"
+              aria-label="Filtrar por estado de ejecución"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"

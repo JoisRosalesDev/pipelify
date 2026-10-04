@@ -84,12 +84,20 @@ export default function ManualPage() {
         </div>
 
         {/* Selector de los 3 Casos de Uso (Pills / Cards) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up animation-delay-75">
+        <div
+          role="tablist"
+          aria-label="Casos de uso ETL"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up animation-delay-75"
+        >
           {MANUAL_USE_CASES.map((useCase) => {
             const isSelected = useCase.id === selectedCaseId;
             return (
               <button
                 key={useCase.id}
+                role="tab"
+                id={`tab-${useCase.id}`}
+                aria-selected={activeCase.id === useCase.id}
+                aria-controls={`panel-${useCase.id}`}
                 onClick={() => setSelectedCaseId(useCase.id)}
                 className={`text-left p-5 rounded-xl border transition-all relative overflow-hidden flex flex-col justify-between ${
                   isSelected
@@ -133,6 +141,9 @@ export default function ManualPage() {
         {/* Detalle del Caso Seleccionado */}
         <section
           key={activeCase.id}
+          role="tabpanel"
+          id={`panel-${activeCase.id}`}
+          aria-labelledby={`tab-${activeCase.id}`}
           className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-xs space-y-8 animate-scale-in animation-delay-150"
         >
           {/* Encabezado del Caso de Uso Activo */}
@@ -296,7 +307,13 @@ export default function ManualPage() {
                         </div>
                         <span>JSON / Python</span>
                       </div>
-                      <pre className="p-4 text-xs font-mono text-zinc-200 overflow-x-auto console-scrollbar leading-relaxed">
+                      <pre
+                        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+                        tabIndex={0}
+                        role="region"
+                        aria-label="Especificación JSON del pipeline"
+                        className="p-4 text-xs font-mono text-zinc-200 overflow-x-auto console-scrollbar leading-relaxed focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
                         <code>{step.codeSnippet}</code>
                       </pre>
                     </div>

@@ -14,6 +14,7 @@ export type WebSocketConnectionStatus =
 interface ConnectionIndicatorProps {
   status: WebSocketConnectionStatus;
   compact?: boolean;
+  showText?: boolean;
   className?: string;
 }
 
@@ -33,7 +34,7 @@ const statusConfig: Record<
     badgeClass:
       "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
     dotClass: "bg-emerald-500",
-    pulseClass: "bg-emerald-400 animate-ping",
+    pulseClass: "bg-emerald-400 animate-ping motion-reduce:animate-none",
   },
   CONNECTING: {
     label: "Conectando WS...",
@@ -64,14 +65,19 @@ const statusConfig: Record<
 export function ConnectionIndicator({
   status,
   compact = false,
+  showText,
   className,
 }: ConnectionIndicatorProps) {
   const config = statusConfig[status] || statusConfig.DISCONNECTED;
   const isSpinning = status === "CONNECTING" || status === "RECONNECTING";
+  const isCompact = compact || showText === false;
 
-  if (compact) {
+  if (isCompact) {
     return (
       <div
+        role="status"
+        aria-live="polite"
+        aria-label={config.label}
         className={twMerge(
           clsx("relative flex items-center justify-center p-1", className)
         )}
@@ -81,7 +87,7 @@ export function ConnectionIndicator({
           {config.pulseClass && (
             <span
               className={clsx(
-                "absolute inline-flex h-full w-full rounded-full opacity-75",
+                "absolute inline-flex h-full w-full rounded-full opacity-75 motion-reduce:animate-none",
                 config.pulseClass
               )}
             />
@@ -99,6 +105,9 @@ export function ConnectionIndicator({
 
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-label={config.label}
       className={twMerge(
         clsx(
           "inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-xs font-medium select-none transition-colors",
@@ -112,7 +121,7 @@ export function ConnectionIndicator({
           {config.pulseClass && (
             <span
               className={clsx(
-                "absolute inline-flex h-full w-full rounded-full opacity-75",
+                "absolute inline-flex h-full w-full rounded-full opacity-75 motion-reduce:animate-none",
                 config.pulseClass
               )}
             />
@@ -126,9 +135,9 @@ export function ConnectionIndicator({
         </span>
       </div>
       {isSpinning ? (
-        <RefreshCw className="w-3 h-3 animate-spin shrink-0" />
+        <RefreshCw className="w-3 h-3 animate-spin shrink-0 motion-reduce:animate-none" aria-hidden="true" />
       ) : (
-        <Activity className="w-3 h-3 shrink-0 opacity-80" />
+        <Activity className="w-3 h-3 shrink-0 opacity-80" aria-hidden="true" />
       )}
       <span>{config.label}</span>
     </div>

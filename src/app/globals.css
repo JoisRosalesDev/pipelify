@@ -257,3 +257,18 @@
   animation-delay: 300ms;
 }
 
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ping,
+  .animate-pulse-glow,
+  .animate-spin,
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-fade-in-down,
+  .animate-scale-in,
+  .animate-slide-in-right,
+  .animate-\62 ounce-subtle {
+    animation: none !important;
+  }
+}
+
