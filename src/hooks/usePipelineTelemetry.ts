@@ -7,6 +7,8 @@ import {
   ExecutionLog,
   ExecutionStatus,
   PipelineDAGPayload,
+  WSEventPayload as PipelineWSEventPayload,
+  NodeMetrics,
 } from "@/types/pipeline";
 import { useDAGState } from "@/hooks/useDAGState";
 import { useWebSocketContext } from "@/components/providers/WebSocketProvider";
@@ -53,7 +55,7 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
   } = useWebSocketContext();
 
   const addLog = useCallback((log: ExecutionLog) => {
-    setLogs((prev) => [...prev, log]);
+    setLogs((prev) => [...prev.slice(-499), log]);
   }, []);
 
   const clearLogs = useCallback(() => {
@@ -64,6 +66,7 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
   useEffect(() => {
     if (!lastEvent) return;
 
+    const eventPayload = lastEvent as unknown as PipelineWSEventPayload;
     const {
       event,
       execution_id,
@@ -73,7 +76,7 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
       error_message,
       log,
       timestamp,
-    } = lastEvent as any;
+    } = eventPayload;
 
     // Si el evento no corresponde a la ejecución activa, ignorar
     if (executionId && execution_id && execution_id !== executionId) {
@@ -160,13 +163,15 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
     }
   }, [initialExecutionId, executionId, connect]);
 
-  // Sincronización REST resiliente (Dual-Transport Fallback mientras la ejecución esté activa)
+  // Sincronización REST resiliente (Dual-Transport Fallback mientras la ejecución esté activa y WS no esté LIVE)
   useEffect(() => {
-    if (!executionId || status === "COMPLETED" || status === "FAILED") {
+    if (!executionId || status === "COMPLETED" || status === "FAILED" || connectionStatus === "LIVE") {
       return;
     }
 
     const intervalId = setInterval(async () => {
+      if ((connectionStatus as string) === "LIVE") return;
+
       try {
         const detail = await executionApi.getExecutionDetail(executionId);
         if (detail) {
@@ -176,7 +181,7 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
               updateNodeStatus(
                 nodeExec.node_id,
                 nodeExec.status,
-                (nodeExec.output_data as Record<string, unknown>) || undefined,
+                (nodeExec.output_data as NodeMetrics) || undefined,
                 nodeExec.error_message || undefined
               );
             });
@@ -199,7 +204,7 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
     }, 1500);
 
     return () => clearInterval(intervalId);
-  }, [executionId, status, updateNodeStatus, addLog]);
+  }, [executionId, status, connectionStatus, updateNodeStatus, addLog]);
 
   /**
    * Despacha la ejecución del DAG hacia el servidor mediante REST HTTP 202
@@ -271,8 +276,11 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
         connect(newExecutionId);
         setIsDispatching(false);
         return newExecutionId;
-      } catch (err: any) {
-        const errMsg = err.message || "Error al despachar ejecución hacia el backend.";
+      } catch (err: unknown) {
+        const errMsg =
+          err instanceof Error
+            ? err.message
+            : "Error al despachar ejecución hacia el backend.";
         setError(errMsg);
         setStatus("FAILED");
         setIsDispatching(false);
@@ -323,12 +331,13 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
         message: "Ejecución cancelada con éxito en el servidor.",
         executionId,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
       addLog({
         id: `log-cancel-err-${Date.now()}`,
         timestamp: new Date().toISOString(),
         level: "ERROR",
-        message: `Error al cancelar ejecución: ${err.message}`,
+        message: `Error al cancelar ejecución: ${errMsg}`,
         executionId,
       });
     }
@@ -381,12 +390,13 @@ export function usePipelineTelemetry(options: UsePipelineTelemetryOptions = {}) 
           message: `Detalles de la ejecución ${id} cargados exitosamente desde la base de datos.`,
           executionId: id,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
         addLog({
           id: `log-fetch-err-${Date.now()}`,
           timestamp: new Date().toISOString(),
           level: "ERROR",
-          message: `Error al recuperar la ejecución ${id}: ${err.message}`,
+          message: `Error al recuperar la ejecución ${id}: ${errMsg}`,
         });
       }
     },

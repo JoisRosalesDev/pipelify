@@ -1,9 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Info, AlertTriangle, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  Info,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle2,
+  Copy,
+  Check,
+} from "lucide-react";
 
 export type LogLevel = "INFO" | "WARN" | "ERROR" | "SUCCESS";
 
@@ -14,6 +21,7 @@ export interface LogViewerRowProps {
   message: string;
   nodeId?: string;
   className?: string;
+  onCopy?: (text: string) => void;
 }
 
 const levelConfig: Record<
@@ -60,13 +68,16 @@ function formatTimestamp(ts: string | Date): string {
   }
 }
 
-export function LogViewerRow({
+export const LogViewerRow = React.memo(function LogViewerRow({
   timestamp,
   level,
   message,
   nodeId,
   className,
+  onCopy,
 }: LogViewerRowProps) {
+  const [copied, setCopied] = useState(false);
+
   const normalizedLevel = (
     typeof level === "string" ? level.toUpperCase() : "INFO"
   ) as LogLevel;
@@ -74,6 +85,26 @@ export function LogViewerRow({
   const config = levelConfig[normalizedLevel] || levelConfig.INFO;
   const IconComponent = config.icon;
   const formattedTime = formatTimestamp(timestamp);
+
+  const handleCopy = async () => {
+    const textToCopy = `[${formattedTime}] [${normalizedLevel}] ${
+      nodeId ? `node:${nodeId} ` : ""
+    }${message}`;
+
+    if (onCopy) {
+      onCopy(textToCopy);
+    }
+
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // Fallback silently if clipboard permissions are restricted
+      }
+    }
+  };
 
   return (
     <div
@@ -85,7 +116,7 @@ export function LogViewerRow({
         )
       )}
     >
-      <span className="shrink-0 text-zinc-400 dark:text-zinc-500 select-none">
+      <span className="shrink-0 text-zinc-500 dark:text-zinc-400 select-none">
         [{formattedTime}]
       </span>
 
@@ -108,6 +139,23 @@ export function LogViewerRow({
       <span className="text-zinc-800 dark:text-zinc-200 break-all leading-relaxed flex-1">
         {message}
       </span>
+
+      <button
+        type="button"
+        onClick={handleCopy}
+        aria-label={copied ? "Log copiado al portapapeles" : "Copiar log"}
+        title={copied ? "Copiado" : "Copiar log"}
+        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 rounded text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 shrink-0 ml-1"
+      >
+        {copied ? (
+          <Check className="w-3.5 h-3.5 text-emerald-500" />
+        ) : (
+          <Copy className="w-3.5 h-3.5" />
+        )}
+      </button>
     </div>
   );
-}
+});
+
+LogViewerRow.displayName = "LogViewerRow";
+
