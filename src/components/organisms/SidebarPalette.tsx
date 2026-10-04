@@ -33,7 +33,7 @@ const PALETTE_ITEMS: NodePaletteItem[] = [
     label: "Cargador",
     description: "Inserta o transmite datos procesados a su destino final.",
     icon: UploadCloud,
-    colorClass: "text-emerald-500 bg-emerald-50/10 border-emerald-200 dark:border-emerald-800",
+    colorClass: "text-emerald-500 bg-emerald-500/10 border-emerald-200 dark:border-emerald-800",
   },
 ];
 
@@ -94,11 +94,11 @@ export function SidebarPalette({ onAddNode, className }: SidebarPaletteProps) {
                     <button
                       type="button"
                       onClick={() => onAddNode(item.type)}
-                      aria-label={`Agregar nodo ${item.label} al lienzo`}
-                      title={`Agregar nodo ${item.label} al lienzo`}
-                      className="p-1 rounded-md text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors touch-manipulation"
+                      aria-label={`Agregar nodo ${item.label}`}
+                      title={`Agregar nodo ${item.label}`}
+                      className="min-h-[44px] min-w-[44px] p-2 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors touch-manipulation flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-4 h-4" />
                     </button>
                   )}
                   <GripVertical className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300" />

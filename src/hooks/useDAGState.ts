@@ -200,7 +200,12 @@ export function useDAGState(
   );
 
   const updateNodeConfig = useCallback(
-    (nodeId: string, config: Record<string, any>, label?: string) => {
+    (
+      nodeId: string,
+      config: Record<string, any>,
+      label?: string,
+      description?: string
+    ) => {
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id !== nodeId) return node;
@@ -209,6 +214,7 @@ export function useDAGState(
             data: {
               ...node.data,
               ...(label ? { label } : {}),
+              ...(description !== undefined ? { description } : {}),
               config: {
                 ...node.data.config,
                 ...config,

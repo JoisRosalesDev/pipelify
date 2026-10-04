@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -47,7 +47,28 @@ function PipelineCanvasContent({
   className,
 }: PipelineCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, setCenter } = useReactFlow();
+  const prevNodesCountRef = useRef(nodes.length);
+  const isInitialMount = useRef(true);
+
+  // Smoothly center and focus on newly added nodes (e.g. added via tap/palette)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      prevNodesCountRef.current = nodes.length;
+      return;
+    }
+
+    if (nodes.length > prevNodesCountRef.current) {
+      const latestNode = nodes[nodes.length - 1];
+      if (latestNode && latestNode.position) {
+        setCenter(latestNode.position.x + 120, latestNode.position.y + 60, {
+          duration: 500,
+        });
+      }
+    }
+    prevNodesCountRef.current = nodes.length;
+  }, [nodes, setCenter]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -102,13 +123,16 @@ function PipelineCanvasContent({
         fitView
         snapToGrid
         snapGrid={[15, 15]}
+        panOnDrag={true}
+        zoomOnPinch={true}
+        preventScrolling={true}
         defaultEdgeOptions={{
           style: { strokeWidth: 2, stroke: "hsl(var(--border))" },
         }}
         proOptions={{ hideAttribution: true }}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#a1a1aa" />
-        <Controls className="!bg-white dark:!bg-zinc-900 !border-zinc-200 dark:!border-zinc-800 !shadow-sm !rounded-lg" />
+        <Controls className="!bg-white dark:!bg-zinc-900 !border-zinc-200 dark:!border-zinc-800 !shadow-sm !rounded-lg touch-manipulation" />
         <MiniMap
           nodeStrokeWidth={3}
           zoomable
@@ -121,7 +145,7 @@ function PipelineCanvasContent({
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none text-zinc-400">
           <Layers className="w-10 h-10 stroke-1" />
           <p className="text-sm font-medium">El lienzo está vacío.</p>
-          <p className="text-xs">Arrastra componentes desde la paleta para construir tu DAG.</p>
+          <p className="text-xs">Arrastra componentes o agrégalos con el botón de la paleta.</p>
         </div>
       )}
     </div>
