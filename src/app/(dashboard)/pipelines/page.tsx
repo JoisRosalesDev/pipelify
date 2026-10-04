@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ActionButton } from "@/components/atoms/ActionButton";
 import { StatusBadge, ExecutionStatus } from "@/components/atoms/StatusBadge";
@@ -226,11 +225,13 @@ export default function PipelinesPage() {
               Gestiona, construye y ejecuta tus flujos de datos automatizados en tiempo real.
             </p>
           </div>
-          <Link href="/executions/new">
-            <ActionButton variant="primary" icon={<Plus className="w-4 h-4" />}>
-              Nuevo Pipeline
-            </ActionButton>
-          </Link>
+          <ActionButton
+            href="/executions/new"
+            variant="primary"
+            icon={<Plus className="w-4 h-4" />}
+          >
+            Nuevo Pipeline
+          </ActionButton>
         </div>
 
         {/* Métricas Globales del Dashboard */}
@@ -350,16 +351,15 @@ export default function PipelinesPage() {
                     {isLaunching ? "Despachando..." : "Ejecutar Ahora"}
                   </ActionButton>
 
-                  <Link href={`/executions/${pipeline.id}`}>
-                    <ActionButton
-                      variant="outline"
-                      size="sm"
-                      icon={<ArrowRight className="w-3.5 h-3.5" />}
-                      iconPosition="right"
-                    >
-                      Abrir Canvas
-                    </ActionButton>
-                  </Link>
+                  <ActionButton
+                    href={`/executions/${pipeline.id}`}
+                    variant="outline"
+                    size="sm"
+                    icon={<ArrowRight className="w-3.5 h-3.5" />}
+                    iconPosition="right"
+                  >
+                    Abrir Canvas
+                  </ActionButton>
                 </div>
               </div>
             );

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ActionButton } from "@/components/atoms/ActionButton";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { ConnectionIndicator } from "@/components/atoms/ConnectionIndicator";
@@ -25,24 +24,22 @@ export default function HomePage() {
       </p>
 
       <div className="flex flex-wrap items-center justify-center gap-4 mb-12 animate-fade-in-up animation-delay-225">
-        <Link href="/pipelines">
-          <ActionButton
-            size="lg"
-            variant="primary"
-            icon={<Play className="w-4 h-4 fill-current" />}
-          >
-            Ver Pipelines
-          </ActionButton>
-        </Link>
-        <Link href="/manual">
-          <ActionButton
-            size="lg"
-            variant="outline"
-            icon={<BookOpen className="w-4 h-4" />}
-          >
-            Manual
-          </ActionButton>
-        </Link>
+        <ActionButton
+          href="/pipelines"
+          size="lg"
+          variant="primary"
+          icon={<Play className="w-4 h-4 fill-current" />}
+        >
+          Ver Pipelines
+        </ActionButton>
+        <ActionButton
+          href="/manual"
+          size="lg"
+          variant="outline"
+          icon={<BookOpen className="w-4 h-4" />}
+        >
+          Manual
+        </ActionButton>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full text-left animate-fade-in-up animation-delay-300">

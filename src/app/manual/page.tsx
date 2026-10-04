@@ -156,23 +156,21 @@ export default function ManualPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3 shrink-0">
-              <Link href={`/executions/${activeCase.pipelineId}`}>
-                <ActionButton
-                  variant="primary"
-                  icon={<Play className="w-4 h-4 fill-current" />}
-                >
-                  Abrir en Canvas
-                </ActionButton>
-              </Link>
-              <Link href="/pipelines">
-                <ActionButton
-                  variant="outline"
-                  icon={<ExternalLink className="w-4 h-4" />}
-                  iconPosition="right"
-                >
-                  Ver en Lista
-                </ActionButton>
-              </Link>
+              <ActionButton
+                href={`/executions/${activeCase.pipelineId}`}
+                variant="primary"
+                icon={<Play className="w-4 h-4 fill-current" />}
+              >
+                Abrir en Canvas
+              </ActionButton>
+              <ActionButton
+                href="/pipelines"
+                variant="outline"
+                icon={<ExternalLink className="w-4 h-4" />}
+                iconPosition="right"
+              >
+                Ver en Lista
+              </ActionButton>
             </div>
           </div>
 
@@ -329,15 +327,15 @@ export default function ManualPage() {
                 Abre el canvas con la configuración precargada de este caso de uso y despacha la ejecución.
               </p>
             </div>
-            <Link href={`/executions/${activeCase.pipelineId}`} className="shrink-0 w-full sm:w-auto">
-              <ActionButton
-                variant="primary"
-                fullWidth
-                icon={<Play className="w-4 h-4 fill-current" />}
-              >
-                Abrir Canvas de {activeCase.title.split(" ")[0]}
-              </ActionButton>
-            </Link>
+            <ActionButton
+              href={`/executions/${activeCase.pipelineId}`}
+              variant="primary"
+              fullWidth
+              className="shrink-0 w-full sm:w-auto"
+              icon={<Play className="w-4 h-4 fill-current" />}
+            >
+              Abrir Canvas de {activeCase.title.split(" ")[0]}
+            </ActionButton>
           </div>
         </section>
 

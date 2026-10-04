@@ -1,6 +1,11 @@
 "use client";
 
-import React, { ButtonHTMLAttributes, forwardRef } from "react";
+import React, {
+  ButtonHTMLAttributes,
+  AnchorHTMLAttributes,
+  forwardRef,
+} from "react";
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -13,8 +18,7 @@ export type ButtonVariant =
   | "ghost";
 export type ButtonSize = "sm" | "md" | "lg";
 
-export interface ActionButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface BaseActionButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   isLoading?: boolean;
@@ -23,6 +27,17 @@ export interface ActionButtonProps
   iconPosition?: "left" | "right";
   fullWidth?: boolean;
 }
+
+export type ActionButtonProps = BaseActionButtonProps &
+  (
+    | ({
+        href: string;
+        disabled?: boolean;
+      } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href">)
+    | ({
+        href?: undefined;
+      } & ButtonHTMLAttributes<HTMLButtonElement>)
+  );
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
@@ -38,12 +53,15 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "min-h-[36px] min-w-[36px] px-3 py-1.5 text-xs rounded-md gap-1.5",
-  md: "min-h-[40px] min-w-[40px] px-4 py-2 text-sm rounded-lg gap-2",
-  lg: "min-h-[44px] min-w-[44px] px-5 py-2.5 text-base rounded-lg gap-2.5",
+  sm: "min-h-[44px] min-w-[44px] px-3.5 py-2 text-xs rounded-md gap-1.5",
+  md: "min-h-[44px] min-w-[44px] px-4 py-2.5 text-sm rounded-lg gap-2",
+  lg: "min-h-[48px] min-w-[48px] px-5 py-3 text-base rounded-lg gap-2.5",
 };
 
-export const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
+export const ActionButton = forwardRef<
+  HTMLButtonElement | HTMLAnchorElement,
+  ActionButtonProps
+>(
   (
     {
       variant = "primary",
@@ -56,27 +74,15 @@ export const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
       disabled,
       className,
       children,
-      ...props
+      href,
+      ...rest
     },
     ref
   ) => {
     const isDisabled = disabled || isLoading;
 
-    return (
-      <button
-        ref={ref}
-        disabled={isDisabled}
-        className={twMerge(
-          clsx(
-            "inline-flex items-center justify-center font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98] touch-manipulation select-none",
-            variantClasses[variant],
-            sizeClasses[size],
-            fullWidth && "w-full",
-            className
-          )
-        )}
-        {...props}
-      >
+    const content = (
+      <>
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin shrink-0" />
@@ -93,6 +99,45 @@ export const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
             )}
           </>
         )}
+      </>
+    );
+
+    const classes = twMerge(
+      clsx(
+        "inline-flex items-center justify-center font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98] touch-manipulation select-none",
+        variantClasses[variant],
+        sizeClasses[size],
+        fullWidth && "w-full",
+        isDisabled && "opacity-50 cursor-not-allowed pointer-events-none",
+        className
+      )
+    );
+
+    if (href) {
+      return (
+        <Link
+          ref={ref as React.Ref<HTMLAnchorElement>}
+          href={href}
+          className={classes}
+          aria-busy={isLoading ? "true" : undefined}
+          aria-disabled={isDisabled ? "true" : undefined}
+          tabIndex={isDisabled ? -1 : undefined}
+          {...(rest as Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href">)}
+        >
+          {content}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        ref={ref as React.Ref<HTMLButtonElement>}
+        disabled={isDisabled}
+        className={classes}
+        aria-busy={isLoading ? "true" : undefined}
+        {...(rest as ButtonHTMLAttributes<HTMLButtonElement>)}
+      >
+        {content}
       </button>
     );
   }
