@@ -6,30 +6,38 @@ import { Play, Activity, ShieldCheck, BookOpen, TrendingUp } from "lucide-react"
 
 export default function HomePage() {
   return (
-    <main id="main-content" className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-5xl mx-auto animate-fade-in pb-16">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-6 animate-fade-in-down">
+    <main
+      id="main-content"
+      className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-12 md:py-16 text-center max-w-5xl mx-auto animate-fade-in w-full"
+    >
+      {/* Badge Superior */}
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-5 sm:mb-6 animate-fade-in-down">
         <Activity className="w-3.5 h-3.5" />
         <span>Pipelify ETL Engine v1.0</span>
       </div>
 
-      <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 mb-4 animate-fade-in-up animation-delay-75">
+      {/* Titular Hero Adaptativo */}
+      <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 mb-3 sm:mb-4 animate-fade-in-up animation-delay-75 leading-tight">
         Orquestación de Pipelines ETL en{" "}
-        <span className="text-blue-600 dark:text-blue-400 font-extrabold">
+        <span className="text-blue-600 dark:text-blue-400 font-extrabold block sm:inline">
           Tiempo Real
         </span>
       </h1>
 
-      <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mb-8 leading-relaxed animate-fade-in-up animation-delay-150">
+      {/* Bajada Descriptiva */}
+      <p className="text-sm sm:text-base md:text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mb-6 sm:mb-8 leading-relaxed animate-fade-in-up animation-delay-150 px-2">
         Diseña DAGs interactivos, ejecuta transformaciones de datos distribuidas con motor DuckDB en memoria y
         monitorea la telemetría en vivo vía WebSockets y Celery.
       </p>
 
-      <div className="flex flex-wrap items-center justify-center gap-4 mb-12 animate-fade-in-up animation-delay-225">
+      {/* Botones de Acción — En móvil apilados a ancho completo con tap targets cómodos */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto mb-10 sm:mb-12 animate-fade-in-up animation-delay-225">
         <ActionButton
           href="/pipelines"
           size="lg"
           variant="primary"
           icon={<Play className="w-4 h-4 fill-current" />}
+          className="w-full sm:w-auto justify-center"
         >
           Ver Pipelines
         </ActionButton>
@@ -38,6 +46,7 @@ export default function HomePage() {
           size="lg"
           variant="outline"
           icon={<BookOpen className="w-4 h-4" />}
+          className="w-full sm:w-auto justify-center"
         >
           Manual
         </ActionButton>
@@ -46,44 +55,46 @@ export default function HomePage() {
           size="lg"
           variant="outline"
           icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}
+          className="w-full sm:w-auto justify-center"
         >
           Ver Benchmarks
         </ActionButton>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full text-left animate-fade-in-up animation-delay-300">
+      {/* Cards de Características Base */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full text-left animate-fade-in-up animation-delay-300">
         <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
             <span className="text-xs font-semibold text-zinc-500 uppercase">
               Estados Visuales
             </span>
             <StatusBadge status="RUNNING" size="sm" />
           </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
             Transiciones reactivas inmediatas de PENDING a RUNNING, COMPLETED o FAILED.
           </p>
         </div>
 
         <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
             <span className="text-xs font-semibold text-zinc-500 uppercase">
               Telemetría WebSocket
             </span>
             <ConnectionIndicator status="LIVE" />
           </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
             Conexión en vivo con reconexión automática y heartbeat Ping/Pong.
           </p>
         </div>
 
         <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
             <span className="text-xs font-semibold text-zinc-500 uppercase">
               Motor Asíncrono
             </span>
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
           </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
             Backend alimentado por FastAPI 0.111, DuckDB OLAP, Celery 5.4 y Upstash Redis Pub/Sub.
           </p>
         </div>
