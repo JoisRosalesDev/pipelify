@@ -1,11 +1,12 @@
 import { ActionButton } from "@/components/atoms/ActionButton";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { ConnectionIndicator } from "@/components/atoms/ConnectionIndicator";
-import { Play, Activity, ShieldCheck, BookOpen } from "lucide-react";
+import { BenchmarkSection } from "@/components/organisms/BenchmarkSection";
+import { Play, Activity, ShieldCheck, BookOpen, TrendingUp } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <main id="main-content" className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-5xl mx-auto animate-fade-in">
+    <main id="main-content" className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-5xl mx-auto animate-fade-in pb-16">
       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-6 animate-fade-in-down">
         <Activity className="w-3.5 h-3.5" />
         <span>Pipelify ETL Engine v1.0</span>
@@ -19,7 +20,7 @@ export default function HomePage() {
       </h1>
 
       <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl mb-8 leading-relaxed animate-fade-in-up animation-delay-150">
-        Diseña DAGs interactivos, ejecuta transformaciones de datos distribuidas y
+        Diseña DAGs interactivos, ejecuta transformaciones de datos distribuidas con motor DuckDB en memoria y
         monitorea la telemetría en vivo vía WebSockets y Celery.
       </p>
 
@@ -39,6 +40,14 @@ export default function HomePage() {
           icon={<BookOpen className="w-4 h-4" />}
         >
           Manual
+        </ActionButton>
+        <ActionButton
+          href="#benchmarks"
+          size="lg"
+          variant="outline"
+          icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}
+        >
+          Ver Benchmarks
         </ActionButton>
       </div>
 
@@ -75,10 +84,13 @@ export default function HomePage() {
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Backend alimentado por FastAPI 0.111, Celery 5.4 y Upstash Redis Pub/Sub.
+            Backend alimentado por FastAPI 0.111, DuckDB OLAP, Celery 5.4 y Upstash Redis Pub/Sub.
           </p>
         </div>
       </div>
+
+      {/* Sección Cuantitativa de Benchmarks para Reclutadores y Tech Leads */}
+      <BenchmarkSection />
     </main>
   );
 }
