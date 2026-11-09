@@ -16,6 +16,7 @@ from app.models.execution import (
     PipelineExecutionModel,
     PipelineNodeExecutionModel,
 )
+from app.services.executor import data_plane_executor
 
 logger = logging.getLogger(__name__)
 
@@ -97,148 +98,161 @@ class PipelineOrchestrator:
             processed_count = 0
             failed_count = 0
 
-            for node in sorted_nodes:
-                node_id = node.get("id")
-                node_data = node.get("data", {})
-                node_type = node_data.get("type", "processor")
+            # Construir mapa de dependencias de entrada para cada nodo
+            upstream_map: Dict[str, List[str]] = {}
+            for edge in edges_list:
+                tgt = edge.get("target")
+                src = edge.get("source")
+                if tgt and src:
+                    upstream_map.setdefault(tgt, []).append(src)
 
-                # Verificación del Circuit Breaker antes de iniciar el nodo
-                if processed_count > 0 and (failed_count / processed_count) > self.CIRCUIT_BREAKER_THRESHOLD:
-                    cb_msg = f"Circuit Breaker activado: la tasa de fallos alcanzó {(failed_count / processed_count) * 100:.1f}% (>50%)."
-                    logger.warning(cb_msg)
-                    execution.status = ExecutionStatus.FAILED
-                    execution.error_summary = cb_msg
-                    execution.finished_at = datetime.now(timezone.utc)
+            try:
+                for node in sorted_nodes:
+                    node_id = node.get("id")
+                    node_data = node.get("data", {})
+                    node_type = node_data.get("type", "processor")
+                    upstream_nodes = upstream_map.get(node_id, [])
+
+                    # Verificación del Circuit Breaker antes de iniciar el nodo
+                    if processed_count > 0 and (failed_count / processed_count) > self.CIRCUIT_BREAKER_THRESHOLD:
+                        cb_msg = f"Circuit Breaker activado: la tasa de fallos alcanzó {(failed_count / processed_count) * 100:.1f}% (>50%)."
+                        logger.warning(cb_msg)
+                        execution.status = ExecutionStatus.FAILED
+                        execution.error_summary = cb_msg
+                        execution.finished_at = datetime.now(timezone.utc)
+                        await db.commit()
+
+                        await publish_execution_event_async(
+                            str(execution_id),
+                            {
+                                "event": "EXECUTION_FINISHED",
+                                "execution_id": str(execution_id),
+                                "node_id": node_id,
+                                "status": ExecutionStatus.FAILED.value,
+                                "metrics": {"processed_nodes": processed_count, "failed_nodes": failed_count},
+                                "error_message": cb_msg,
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                            },
+                        )
+                        return {"status": "FAILED", "error": cb_msg}
+
+                    # Crear o buscar registro de ejecución de nodo
+                    node_exec = await self._get_or_create_node_execution(
+                        db, execution_id, node_id, node_type
+                    )
+                    node_exec.status = ExecutionStatus.RUNNING
+                    node_exec.started_at = datetime.now(timezone.utc)
                     await db.commit()
 
+                    # Evento NODE_UPDATED -> RUNNING
                     await publish_execution_event_async(
                         str(execution_id),
                         {
-                            "event": "EXECUTION_FINISHED",
+                            "event": "NODE_UPDATED",
                             "execution_id": str(execution_id),
                             "node_id": node_id,
-                            "status": ExecutionStatus.FAILED.value,
-                            "metrics": {"processed_nodes": processed_count, "failed_nodes": failed_count},
-                            "error_message": cb_msg,
+                            "status": ExecutionStatus.RUNNING.value,
+                            "metrics": {"node_label": node_data.get("label", node_id)},
+                            "error_message": None,
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                         },
                     )
-                    return {"status": "FAILED", "error": cb_msg}
 
-                # Crear o buscar registro de ejecución de nodo
-                node_exec = await self._get_or_create_node_execution(
-                    db, execution_id, node_id, node_type
-                )
-                node_exec.status = ExecutionStatus.RUNNING
-                node_exec.started_at = datetime.now(timezone.utc)
+                    # Intentar ejecución real del nodo con DuckDB y Exponential Backoff
+                    success, node_metrics, last_error = await self._execute_node_with_retries(
+                        db, node_exec, node, execution_id=execution_id, upstream_nodes=upstream_nodes
+                    )
+
+                    processed_count += 1
+
+                    if success:
+                        node_exec.status = ExecutionStatus.COMPLETED
+                        node_exec.finished_at = datetime.now(timezone.utc)
+                        node_exec.output_data = node_metrics
+                        await db.commit()
+
+                        # Evento NODE_UPDATED -> COMPLETED
+                        await publish_execution_event_async(
+                            str(execution_id),
+                            {
+                                "event": "NODE_UPDATED",
+                                "execution_id": str(execution_id),
+                                "node_id": node_id,
+                                "status": ExecutionStatus.COMPLETED.value,
+                                "metrics": node_metrics,
+                                "error_message": None,
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                            },
+                        )
+                    else:
+                        failed_count += 1
+                        node_exec.status = ExecutionStatus.FAILED
+                        node_exec.finished_at = datetime.now(timezone.utc)
+                        node_exec.error_message = last_error
+                        await db.commit()
+
+                        # Evento NODE_UPDATED -> FAILED
+                        await publish_execution_event_async(
+                            str(execution_id),
+                            {
+                                "event": "NODE_UPDATED",
+                                "execution_id": str(execution_id),
+                                "node_id": node_id,
+                                "status": ExecutionStatus.FAILED.value,
+                                "metrics": None,
+                                "error_message": last_error,
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                            },
+                        )
+
+                        # Abortar pipeline completo ante fallo inasumible del nodo
+                        error_summary = f"Fallo catastrófico en el nodo '{node_id}': {last_error}"
+                        execution.status = ExecutionStatus.FAILED
+                        execution.error_summary = error_summary
+                        execution.finished_at = datetime.now(timezone.utc)
+                        await db.commit()
+
+                        await publish_execution_event_async(
+                            str(execution_id),
+                            {
+                                "event": "EXECUTION_FINISHED",
+                                "execution_id": str(execution_id),
+                                "node_id": node_id,
+                                "status": ExecutionStatus.FAILED.value,
+                                "metrics": {"processed_nodes": processed_count, "failed_nodes": failed_count},
+                                "error_message": error_summary,
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                            },
+                        )
+                        return {"status": "FAILED", "error": error_summary}
+
+                # 6. Finalizar pipeline exitosamente: RUNNING -> COMPLETED
+                execution.status = ExecutionStatus.COMPLETED
+                execution.finished_at = datetime.now(timezone.utc)
                 await db.commit()
 
-                # Evento NODE_UPDATED -> RUNNING
                 await publish_execution_event_async(
                     str(execution_id),
                     {
-                        "event": "NODE_UPDATED",
+                        "event": "EXECUTION_FINISHED",
                         "execution_id": str(execution_id),
-                        "node_id": node_id,
-                        "status": ExecutionStatus.RUNNING.value,
-                        "metrics": {"node_label": node_data.get("label", node_id)},
+                        "node_id": None,
+                        "status": ExecutionStatus.COMPLETED.value,
+                        "metrics": {
+                            "total_nodes": len(sorted_nodes),
+                            "processed_nodes": processed_count,
+                            "failed_nodes": 0,
+                        },
                         "error_message": None,
                         "timestamp": datetime.now(timezone.utc).isoformat(),
                     },
                 )
 
-                # Intentar ejecución del nodo con Exponential Backoff y Jitter
-                success, node_metrics, last_error = await self._execute_node_with_retries(
-                    db, node_exec, node
-                )
+                logger.info(f"Pipeline completado exitosamente: {execution_id}")
+                return {"status": "COMPLETED", "nodes_processed": processed_count}
+            finally:
+                data_plane_executor.close_session(str(execution_id))
 
-                processed_count += 1
-
-                if success:
-                    node_exec.status = ExecutionStatus.COMPLETED
-                    node_exec.finished_at = datetime.now(timezone.utc)
-                    node_exec.output_data = node_metrics
-                    await db.commit()
-
-                    # Evento NODE_UPDATED -> COMPLETED
-                    await publish_execution_event_async(
-                        str(execution_id),
-                        {
-                            "event": "NODE_UPDATED",
-                            "execution_id": str(execution_id),
-                            "node_id": node_id,
-                            "status": ExecutionStatus.COMPLETED.value,
-                            "metrics": node_metrics,
-                            "error_message": None,
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                        },
-                    )
-                else:
-                    failed_count += 1
-                    node_exec.status = ExecutionStatus.FAILED
-                    node_exec.finished_at = datetime.now(timezone.utc)
-                    node_exec.error_message = last_error
-                    await db.commit()
-
-                    # Evento NODE_UPDATED -> FAILED
-                    await publish_execution_event_async(
-                        str(execution_id),
-                        {
-                            "event": "NODE_UPDATED",
-                            "execution_id": str(execution_id),
-                            "node_id": node_id,
-                            "status": ExecutionStatus.FAILED.value,
-                            "metrics": None,
-                            "error_message": last_error,
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                        },
-                    )
-
-                    # Abortar pipeline completo ante fallo inasumible del nodo
-                    error_summary = f"Fallo catastrófico en el nodo '{node_id}': {last_error}"
-                    execution.status = ExecutionStatus.FAILED
-                    execution.error_summary = error_summary
-                    execution.finished_at = datetime.now(timezone.utc)
-                    await db.commit()
-
-                    await publish_execution_event_async(
-                        str(execution_id),
-                        {
-                            "event": "EXECUTION_FINISHED",
-                            "execution_id": str(execution_id),
-                            "node_id": node_id,
-                            "status": ExecutionStatus.FAILED.value,
-                            "metrics": {"processed_nodes": processed_count, "failed_nodes": failed_count},
-                            "error_message": error_summary,
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                        },
-                    )
-                    return {"status": "FAILED", "error": error_summary}
-
-            # 6. Finalizar pipeline exitosamente: RUNNING -> COMPLETED
-            execution.status = ExecutionStatus.COMPLETED
-            execution.finished_at = datetime.now(timezone.utc)
-            await db.commit()
-
-            await publish_execution_event_async(
-                str(execution_id),
-                {
-                    "event": "EXECUTION_FINISHED",
-                    "execution_id": str(execution_id),
-                    "node_id": None,
-                    "status": ExecutionStatus.COMPLETED.value,
-                    "metrics": {
-                        "total_nodes": len(sorted_nodes),
-                        "processed_nodes": processed_count,
-                        "failed_nodes": 0,
-                    },
-                    "error_message": None,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                },
-            )
-
-            logger.info(f"Pipeline completado exitosamente: {execution_id}")
-            return {"status": "COMPLETED", "nodes_processed": processed_count}
 
     def _topological_sort(
         self, nodes: List[Dict[str, Any]], edges: List[Dict[str, Any]]
@@ -306,7 +320,12 @@ class PipelineOrchestrator:
         return node_exec
 
     async def _execute_node_with_retries(
-        self, db: AsyncSession, node_exec: PipelineNodeExecutionModel, node: Dict[str, Any]
+        self,
+        db: AsyncSession,
+        node_exec: PipelineNodeExecutionModel,
+        node: Dict[str, Any],
+        execution_id: Optional[UUID] = None,
+        upstream_nodes: Optional[List[str]] = None,
     ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
         Ejecuta la tarea del nodo aplicando el algoritmo de Backoff Exponencial con Jitter:
@@ -328,7 +347,9 @@ class PipelineOrchestrator:
                 await asyncio.sleep(wait_seconds)
 
             try:
-                metrics = await self._run_node_task_logic(node)
+                metrics = await self._run_node_task_logic(
+                    node, execution_id=execution_id, upstream_nodes=upstream_nodes
+                )
                 return True, metrics, None
             except Exception as e:
                 last_error = str(e)
@@ -338,36 +359,23 @@ class PipelineOrchestrator:
 
         return False, None, last_error
 
-    async def _run_node_task_logic(self, node: Dict[str, Any]) -> Dict[str, Any]:
+    async def _run_node_task_logic(
+        self,
+        node: Dict[str, Any],
+        execution_id: Optional[UUID] = None,
+        upstream_nodes: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         """
-        Lógica simulada de procesamiento ETL para extractores, transformadores y cargadores.
+        Ejecución real de tareas ETL mediante DuckDB en memoria en un hilo secundario
+        (evita bloquear el event loop de FastAPI con cómputo analítico).
         """
-        node_data = node.get("data", {})
-        config = node_data.get("config", {})
-        node_type = node_data.get("type", "processor")
-
-        # Simulación de latencia de red/I/O realista (0.3s a 0.8s)
-        await asyncio.sleep(random.uniform(0.3, 0.8))
-
-        # Soporte de test de fallos para resiliencia y verificación
-        if (
-            config.get("fail_test") is True
-            or config.get("force_fail") is True
-            or config.get("forceFail") is True
-            or "fail" in str(config.get("transformFunction", "")).lower()
-        ):
-            raise ValueError(f"Fallo simulado por configuración de prueba en el nodo '{node.get('id')}'")
-
-        records_count = config.get("batch_size", random.randint(100, 5000))
-        exec_time = random.randint(45, 350)
-
-        return {
-            "node_id": node.get("id"),
-            "node_type": node_type,
-            "processed_records": records_count,
-            "execution_time_ms": exec_time,
-            "status": "SUCCESS",
-        }
+        exec_id_str = str(execution_id) if execution_id else "default-exec"
+        return await asyncio.to_thread(
+            data_plane_executor.execute_node,
+            exec_id_str,
+            node,
+            upstream_nodes,
+        )
 
 
 orchestrator = PipelineOrchestrator()
